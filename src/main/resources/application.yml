@@ -1,3 +1,19 @@
+spring:
+  jpa:
+    generate-ddl: false
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/devpub?stringtype=unspecified}
+    username: postgres
+    password: 123
+
+#FLYWAY
+flyway:
+  user: postgres
+  password: 123
 
 #mail page
 default:
