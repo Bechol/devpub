@@ -23,3 +23,17 @@ default:
   email: mail@mail.ru
   copyright: Дмитрий Сергеев
   copyrightFrom: 2005
+
+#Captcha
+captcha:
+  image:
+    format: png
+    width: 100
+    height: 35
+    compress-ratio: 1.0F
+  token:
+    min-length: 3
+    delta: 2
+  storage-limit: 1
+
+
