@@ -32,4 +32,15 @@ public class DefaultControllerTest extends AbstractControllerTest {
                 .andExpect(content().string(containsString(copyrightFrom)))
                 .andReturn();
     }
+
+    @Test
+    public void whenRequestGlobalSettingsThenResponseWithSettingsMapOk() throws Exception {
+        mockMvc.perform(get("/api/settings")).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(containsString("MULTIUSER_MODE")))
+                .andExpect(content().string(containsString("POST_PREMODERATION")))
+                .andExpect(content().string(containsString("STATISTICS_IS_PUBLIC")))
+                .andReturn();
+    }
 }
