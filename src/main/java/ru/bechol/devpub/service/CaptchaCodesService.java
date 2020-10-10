@@ -62,6 +62,18 @@ public class CaptchaCodesService {
     }
 
     /**
+     * Метод captchaIsExist.
+     * Проверка существования капчи в таблице captcha_codes.
+     *
+     * @param code       - код с картинки.
+     * @param secretCode - секретный код.
+     * @return true - если капча найдена в таблице captcha_codes.
+     */
+    public boolean captchaIsExist(String code, String secretCode) {
+        return captchaCodesRepository.findByCodeAndSecretCode(code, secretCode).isPresent();
+    }
+
+    /**
      * Метод createResponse.
      * Создание ответа на запрос GET /api/auth/captcha.
      *

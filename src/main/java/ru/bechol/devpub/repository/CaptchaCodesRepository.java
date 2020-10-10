@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.CaptchaCodes;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Класс CaptchaCodesRepository.
@@ -20,6 +21,15 @@ import java.time.LocalDateTime;
  */
 @Repository
 public interface CaptchaCodesRepository extends JpaRepository<CaptchaCodes, Long> {
+
+    /**
+     * Метод findByCodeAndSecretCode.
+     * Поиск по коду и секретному коду капчи.
+     * @param code - код на картинке капчи.
+     * @param secretCode - секретный код.
+     * @return Optional<CaptchaCodes>.
+     */
+    Optional<CaptchaCodes> findByCodeAndSecretCode(String code, String secretCode);
 
     /**
      * Метод deleteOld.
