@@ -1,4 +1,6 @@
 spring:
+  mvc:
+    locale: en
   jpa:
     generate-ddl: false
     show-sql: true
