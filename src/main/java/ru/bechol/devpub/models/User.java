@@ -43,7 +43,7 @@ public class User implements UserDetails {
     @Column(name = "code")
     private String forgotCode;
     @Column(name = "photo")
-    private String photoLink;
+    private String photo;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -52,6 +52,10 @@ public class User implements UserDetails {
             inverseJoinColumns = {@JoinColumn(name = "role_id")}
     )
     private Set<Role> roles = new HashSet<>();
+
+    public boolean isModerator() {
+        return this.roles.stream().anyMatch(role -> role.getName().equals("ROLE_MODERATOR"));
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -5,24 +5,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
+import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.RegistrationResponse;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Класс UserService.
  * Реализация сервисного слоя для User.
- * @implements UserDetailsService.
+ *
  * @author Oleg Bech
  * @version 1.0
+ * @implements UserDetailsService.
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.models.User
  * @see UserRepository
@@ -30,8 +35,13 @@ import java.util.stream.Collectors;
 @Service
 public class UserService implements UserDetailsService {
 
+    private final static String ROLE_USER = "ROLE_USER";
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Autowired
     private Messages messages;
 
@@ -45,11 +55,25 @@ public class UserService implements UserDetailsService {
     public ResponseEntity<RegistrationResponse> registrateNewUser(RegisterRequest registerRequest) {
         User user = new User();
         user.setEmail(registerRequest.getE_mail());
-        user.setPassword(registerRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
         user.setModerator(false);
-        userRepository.save(user);
+        userRepository.save(setUserRole(user));
         return ResponseEntity.ok().body(RegistrationResponse.builder().result(true).build());
+    }
+
+    /**
+     * Метод setUserRole.
+     * Присвоение роли ROLE_USER вновь зарегистрированному пользователь.
+     *
+     * @param user - пользователь.
+     * @return пользователь с роллью user.
+     */
+    private User setUserRole(User user) {
+        Set<Role> userRoles = user.getRoles();
+        roleRepository.findByName(ROLE_USER).ifPresent(userRoles::add);
+        user.setRoles(userRoles);
+        return user;
     }
 
     /**
@@ -83,6 +107,7 @@ public class UserService implements UserDetailsService {
     /**
      * Метод loadUserByUsername
      * Поиск пользователя по email в базе.
+     *
      * @param email - email введеный на форме авторизации и аутентификации.
      * @return UserDetails
      * @throws UsernameNotFoundException
