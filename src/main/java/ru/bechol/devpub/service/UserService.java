@@ -2,6 +2,9 @@ package ru.bechol.devpub.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -17,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * Класс UserService.
  * Реализация сервисного слоя для User.
- *
+ * @implements UserDetailsService.
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
@@ -25,10 +28,12 @@ import java.util.stream.Collectors;
  * @see UserRepository
  */
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private Messages messages;
 
     /**
      * Метод registrateNewUser.
@@ -73,5 +78,20 @@ public class UserService {
      */
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    /**
+     * Метод loadUserByUsername
+     * Поиск пользователя по email в базе.
+     * @param email - email введеный на форме авторизации и аутентификации.
+     * @return UserDetails
+     * @throws UsernameNotFoundException
+     */
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        messages.getMessage("user.not-found.by-email", email)
+                ));
     }
 }
