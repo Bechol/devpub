@@ -32,13 +32,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/", "index", "/css/*", "/fonts/**", "/img/**", "/js/**", "/favicon.ico").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/init").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/settings").permitAll()
-                .antMatchers("/api/auth/**").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/auth/login").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/auth/register").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/auth/captcha").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/tag").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post**").permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
-                .formLogin().disable();
+                .formLogin().disable()
+                .logout().logoutSuccessHandler(new AppLogoutHandler())
+                .logoutUrl("/api/auth/logout")
+                .clearAuthentication(true)
+                .invalidateHttpSession(true)
+                .logoutSuccessUrl("/");
     }
 
     @Override
