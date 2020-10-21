@@ -44,6 +44,12 @@ public class User implements UserDetails {
     private String forgotCode;
     @Column(name = "photo")
     private String photo;
+    @OneToMany(mappedBy = "moderator")
+    private Set<Post> moderatedPosts;
+    @OneToMany(mappedBy = "user")
+    private Set<Post> posts;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<Vote> votes;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
