@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class LoginResponse {
+public class AuthorizationResponse {
 
     private boolean result;
     @JsonProperty("user")

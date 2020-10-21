@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.bechol.devpub.service.UserService;
 
+import java.util.Map;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -21,20 +23,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private UserService userDetailsService;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private Map<String, Long> sessionMap;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .cors().disable()
                 .csrf().disable()
-                .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean()), UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement()
+                .sessionFixation().none()
+                .and()
+                .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean(), sessionMap),
+                        UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/fonts/**", "/img/**", "/js/**", "/favicon.ico").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/init").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/settings").permitAll()
-                .antMatchers(HttpMethod.POST,"/api/auth/login").permitAll()
-                .antMatchers(HttpMethod.POST,"/api/auth/register").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/auth/captcha").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/auth/check").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/auth/captcha").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/tag").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post**").permitAll()
                 .anyRequest()

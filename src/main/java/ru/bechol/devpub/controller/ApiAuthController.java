@@ -6,13 +6,16 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.bechol.devpub.request.RegisterRequest;
+import ru.bechol.devpub.response.AuthorizationResponse;
 import ru.bechol.devpub.response.CaptchaResponse;
 import ru.bechol.devpub.response.RegistrationResponse;
 import ru.bechol.devpub.service.CaptchaCodesService;
 import ru.bechol.devpub.service.UserService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Класс ApiAuthController.
@@ -32,6 +35,8 @@ public class ApiAuthController {
     private CaptchaCodesService captchaCodesService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private Map<String, Long> sessionMap;
 
     /**
      * Метод getCaptcha.
@@ -68,4 +73,19 @@ public class ApiAuthController {
         }
         return userService.registrateNewUser(registerRequest);
     }
+
+    /**
+     * Метод check.
+     * GET запрос /api/auth/check
+     * Проверка наличия идентификатора текущей сессии в списке авторизованных.
+     *
+     * @param request запрос от клиента.
+     * @return информация о текущем авторизованном пользователе, если он авторизован.
+     * @see AuthorizationResponse
+     */
+    @GetMapping("/check")
+    public ResponseEntity<AuthorizationResponse> check(HttpServletRequest request) {
+        return userService.checkAuthorization(request);
+    }
+
 }

@@ -14,8 +14,10 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.RegisterRequest;
+import ru.bechol.devpub.response.AuthorizationResponse;
 import ru.bechol.devpub.response.RegistrationResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +46,8 @@ public class UserService implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private Messages messages;
+    @Autowired
+    private Map<String, Long> sessionMap;
 
     /**
      * Метод registrateNewUser.
@@ -118,5 +122,30 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         messages.getMessage("user.not-found.by-email", email)
                 ));
+    }
+
+    public ResponseEntity<AuthorizationResponse> checkAuthorization(HttpServletRequest request) {
+        ResponseEntity<AuthorizationResponse> falseResponse = ResponseEntity.ok().body(
+                AuthorizationResponse.builder().result(false).build());
+        if (sessionMap.isEmpty()) {
+            return falseResponse;
+        }
+        Long userId = sessionMap.get(request.getSession().getId());
+        if (userId == null) {
+            return falseResponse;
+        }
+        User authorizedUser = userRepository.findById(userId).orElse(null);
+        if (authorizedUser == null) {
+            return falseResponse;
+        }
+        return ResponseEntity.ok().body(AuthorizationResponse.builder().result(true)
+                .userData(AuthorizationResponse.UserData.builder()
+                        .id(authorizedUser.getId())
+                        .email(authorizedUser.getEmail())
+                        .name(authorizedUser.getName())
+                        .photo(authorizedUser.getPhoto())
+                        .moderationCount(0) //todo количество постов на модерации
+                        .moderation(authorizedUser.isModerator())
+                        .settings(authorizedUser.isModerator()).build()).build());
     }
 }
