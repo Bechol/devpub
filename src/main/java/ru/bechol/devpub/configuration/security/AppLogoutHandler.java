@@ -1,5 +1,6 @@
 package ru.bechol.devpub.configuration.security;
 
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -17,10 +18,10 @@ import java.util.Map;
  * @version 1.0
  * @email oleg071984@gmail.com
  */
+@AllArgsConstructor
 public class AppLogoutHandler implements LogoutSuccessHandler {
 
-    @Autowired
-    private Map<String, Long> sessionMap;
+    private final Map<String, Long> sessionMap;
 
     /**
      * Метод onLogoutSuccess.
