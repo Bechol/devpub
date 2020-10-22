@@ -31,9 +31,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .cors().disable()
                 .csrf().disable()
-                .sessionManagement()
-                .sessionFixation().none()
-                .and()
                 .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean(), sessionMap),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
@@ -50,7 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticated()
                 .and()
                 .formLogin().disable()
-                .logout().logoutSuccessHandler(new AppLogoutHandler())
+                .logout().logoutSuccessHandler(new AppLogoutHandler(sessionMap))
                 .logoutUrl("/api/auth/logout")
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
