@@ -11,6 +11,21 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/devpub?stringtype=unspecified}
     username: ${JDBC_DATABASE_USERNAME:postgres}
     password: ${JDBC_DATABASE_PASSWORD:123}
+  mail:
+    protocol: smtps
+    host: smtp.gmail.com
+    port: 465
+    username: dev.pub.adm@gmail.com
+    password: smazrpsyukerpgkl
+
+mail-sender:
+  debug: true
+  sender-name: DevPub
+  executor:
+    core-pool-size: 2
+    max-pool-size: 4
+    queue-capacity: 200
+    thread-name-prefix: ES-Thread-
 
 #FLYWAY
 flyway:

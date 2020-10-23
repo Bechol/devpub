@@ -1,10 +1,12 @@
 package ru.bechol.devpub.controller;
 
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.bechol.devpub.request.EmailRequest;
 import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.AuthorizationResponse;
 import ru.bechol.devpub.response.CaptchaResponse;
@@ -86,6 +88,23 @@ public class ApiAuthController {
     @GetMapping("/check")
     public ResponseEntity<AuthorizationResponse> check(HttpServletRequest request) {
         return userService.checkAuthorization(request);
+    }
+
+    /**
+     * Метод restorePassword.
+     * POST запрос /api/auth/restore
+     * Метод проверяет наличие в базе пользователя с указанным e-mail. Если пользователь найден, ему отправляется письмо со
+     * ссылкой на восстановление пароля.
+     *
+     * @param emailRequest - данные с пользовательской формы ввода.
+     * @return ResponseEntity<AuthorizationResponse>.
+     */
+    @PostMapping("/restore")
+    public ResponseEntity<AuthorizationResponse> restorePassword(@RequestBody EmailRequest emailRequest) {
+        if (!Strings.isNotEmpty(emailRequest.getEmail())) {
+            return ResponseEntity.ok().body(AuthorizationResponse.builder().result(false).build());
+        }
+        return userService.checkAndSendForgotPasswordMail(emailRequest.getEmail());
     }
 
 }

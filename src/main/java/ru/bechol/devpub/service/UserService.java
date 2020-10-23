@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.RoleRepository;
@@ -21,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +50,8 @@ public class UserService implements UserDetailsService {
     private Messages messages;
     @Autowired
     private Map<String, Long> sessionMap;
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Метод registrateNewUser.
@@ -147,5 +151,39 @@ public class UserService implements UserDetailsService {
                         .moderationCount(0) //todo количество постов на модерации
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
+    }
+
+    /**
+     * Метод checkAndSendForgotPasswordMail.
+     * Формирование и отправка письма с ссылкой для восстановления пароля.
+     *
+     * @param email - email для отправки.
+     * @return ResponseEntity<AuthorizationResponse>.
+     */
+    public ResponseEntity<AuthorizationResponse> checkAndSendForgotPasswordMail(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            user.setForgotCode(UUID.randomUUID().toString());
+            userRepository.save(user);
+            emailService.send(user.getEmail(), messages.getMessage("rp.mail-subject"),
+                    messages.getMessage(
+                            "rp.message-text", user.getName(), createRestorePasswordLink(user.getForgotCode())
+                    )
+            );
+            return ResponseEntity.ok().body(AuthorizationResponse.builder().result(true).build());
+        }
+        return ResponseEntity.ok().body(AuthorizationResponse.builder().result(false).build());
+    }
+
+    /**
+     * Метод createRestorePasswordLink.
+     * Формирование ссылки для восстановления пароля.
+     *
+     * @param forgotCode - токен для восстановления пароля.
+     * @return ссылка для восстановления пароля.
+     */
+    private String createRestorePasswordLink(String forgotCode) {
+        return new StringBuffer(ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/login/change-password/").toUriString()).append(forgotCode).toString();
     }
 }
