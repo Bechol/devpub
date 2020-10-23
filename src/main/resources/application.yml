@@ -9,13 +9,13 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/devpub?stringtype=unspecified}
-    username: postgres
-    password: 123
+    username: ${JDBC_DATABASE_USERNAME:postgres}
+    password: ${JDBC_DATABASE_PASSWORD:123}
 
 #FLYWAY
 flyway:
-  user: postgres
-  password: 123
+  user: ${JDBC_DATABASE_USERNAME:postgres}
+  password: ${JDBC_DATABASE_PASSWORD:123}
 
 #mail page
 default:
