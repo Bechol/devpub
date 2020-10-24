@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.bechol.devpub.request.ChangePasswordRequest;
 import ru.bechol.devpub.request.EmailRequest;
 import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.AuthorizationResponse;
@@ -105,6 +106,20 @@ public class ApiAuthController {
             return ResponseEntity.ok().body(AuthorizationResponse.builder().result(false).build());
         }
         return userService.checkAndSendForgotPasswordMail(emailRequest.getEmail());
+    }
+
+    /**
+     * Метод changePassword.
+     * POST запрос /api/auth/password
+     * Проверка данных запроса. Изменение пароля пользователя .
+     *
+     * @param changePasswordRequest - данные с пользовательской формы ввода.
+     * @return ResponseEntity<AuthorizationResponse>.
+     */
+    @PostMapping("/password")
+    public ResponseEntity<AuthorizationResponse> changePassword(
+            @Valid @RequestBody ChangePasswordRequest changePasswordRequest, BindingResult bindingResult) {
+        return userService.changePassword(changePasswordRequest, bindingResult);
     }
 
 }

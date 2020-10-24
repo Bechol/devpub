@@ -26,4 +26,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Optional<User>.
      */
     Optional<User> findByEmail(String email);
+
+    /**
+     * Метод findByForgotCode.
+     * Поиск пользователя по коду восстановления пароля.
+     *
+     * @param code - код для поиска.
+     * @return Optional<User>.
+     */
+    Optional<User> findByForgotCode(String code);
 }

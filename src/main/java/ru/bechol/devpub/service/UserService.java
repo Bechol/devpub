@@ -14,6 +14,7 @@ import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
+import ru.bechol.devpub.request.ChangePasswordRequest;
 import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.AuthorizationResponse;
 import ru.bechol.devpub.response.RegistrationResponse;
@@ -52,6 +53,8 @@ public class UserService implements UserDetailsService {
     private Map<String, Long> sessionMap;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private CaptchaCodesService captchaCodesService;
 
     /**
      * Метод registrateNewUser.
@@ -186,4 +189,36 @@ public class UserService implements UserDetailsService {
         return new StringBuffer(ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/login/change-password/").toUriString()).append(forgotCode).toString();
     }
+
+    /**
+     * Метод changePassword.
+     * Изменение парооля пользователя.
+     *
+     * @param changePasswordRequest тело запроса на изменение пароля.
+     * @param bindingResult         результаты валидации данных.
+     * @return esponseEntity<AuthorizationResponse>.
+     */
+    public ResponseEntity<AuthorizationResponse> changePassword(ChangePasswordRequest changePasswordRequest,
+                                                                BindingResult bindingResult) {
+        if (!captchaCodesService.captchaIsExist(changePasswordRequest.getCaptcha(),
+                changePasswordRequest.getCaptcha_secret())) {
+            bindingResult.addError(new FieldError(
+                    "captcha", "captcha", messages.getMessage("cp.errors.captcha-code")));
+        }
+        User user = userRepository.findByForgotCode(changePasswordRequest.getCode()).orElse(null);
+        if (user == null) {
+            bindingResult.addError(new FieldError("code", "code",
+                    messages.getMessage("cp.errors.forgot-code")));
+        }
+        //todo отдельный метод для формирования ответа с ошибками
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+            return ResponseEntity.ok().body(AuthorizationResponse.builder().result(false).errors(errorMap).build());
+        }
+        user.setPassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
+        userRepository.save(user);
+        return ResponseEntity.ok().body(AuthorizationResponse.builder().result(true).build());
+    }
+
 }
