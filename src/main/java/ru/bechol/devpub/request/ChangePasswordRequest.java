@@ -3,6 +3,8 @@ package ru.bechol.devpub.request;
 import lombok.Data;
 import ru.bechol.devpub.request.validators.annotations.ValidPassword;
 
+import javax.validation.constraints.NotEmpty;
+
 /**
  * Класс ChangePasswordRequest.
  * Тело запроса на изменение пароля.
@@ -13,9 +15,12 @@ import ru.bechol.devpub.request.validators.annotations.ValidPassword;
 @Data
 public class ChangePasswordRequest {
 
+    @NotEmpty
     private String code;
     @ValidPassword
     private String password;
+    @NotEmpty
     private String captcha;
+    @NotEmpty
     private String captcha_secret;
 }

@@ -5,6 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.bechol.devpub.response.GeneralInfoResponse;
 
+/**
+ * Класс GeneralInfoConfig.
+ * Бин для чтения основных параметров блога.
+ *
+ * @author Oleg Bech
+ * @email oleg071984@gmail.com
+ */
 @Configuration
 public class GeneralInfoConfig {
 

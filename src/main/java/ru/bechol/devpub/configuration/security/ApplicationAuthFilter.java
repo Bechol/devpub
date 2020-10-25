@@ -10,7 +10,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import ru.bechol.devpub.models.User;
-import ru.bechol.devpub.response.AuthorizationResponse;
+import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.response.UserData;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -59,19 +60,19 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                               AuthenticationException failed) throws IOException {
         response.getWriter().println(new ObjectMapper()
-                .writeValueAsString(AuthorizationResponse.builder().result(false).userData(null).build()));
+                .writeValueAsString(Response.builder().result(false).build()));
     }
 
-    private AuthorizationResponse createLoginResponse(User user, Authentication authenticationResult) {
-        return AuthorizationResponse.builder()
+    private Response<?> createLoginResponse(User user, Authentication authenticationResult) {
+        return Response.builder()
                 .result(authenticationResult.isAuthenticated())
-                .userData(AuthorizationResponse.UserData.builder()
+                .user(UserData.builder()
                         .id(user.getId())
                         .name(user.getName())
                         .photo(user.getPhoto())
                         .email(user.getEmail())
                         .moderation(user.isModerator())
-                        .moderationCount(0)
+                        .moderationCount(user.getModeratedPosts().size())
                         .settings(user.isModerator()).build()).build();
     }
 

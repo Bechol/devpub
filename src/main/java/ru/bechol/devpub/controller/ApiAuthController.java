@@ -1,17 +1,14 @@
 package ru.bechol.devpub.controller;
 
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.bechol.devpub.request.ChangePasswordRequest;
 import ru.bechol.devpub.request.EmailRequest;
 import ru.bechol.devpub.request.RegisterRequest;
-import ru.bechol.devpub.response.AuthorizationResponse;
 import ru.bechol.devpub.response.CaptchaResponse;
-import ru.bechol.devpub.response.RegistrationResponse;
+import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.CaptchaCodesService;
 import ru.bechol.devpub.service.UserService;
 
@@ -62,19 +59,12 @@ public class ApiAuthController {
      *
      * @param registerRequest данные пользовательской формы регистрации.
      * @param bindingResult   результаты валидации данных пользовательской формы.
-     * @return ResponseEntity<RegistrationResponse>.
+     * @return ResponseEntity<?>.
      */
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegisterRequest registerRequest,
-                                                         BindingResult bindingResult) {
-        if (!captchaCodesService.captchaIsExist(registerRequest.getCaptcha(), registerRequest.getCaptcha_secret())) {
-            bindingResult.addError(new FieldError(
-                    "captcha", "captcha", "Код с картинки введён неверно"));
-        }
-        if (bindingResult.hasErrors()) {
-            return userService.registrateWithValidationErrors(bindingResult);
-        }
-        return userService.registrateNewUser(registerRequest);
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest,
+                                      BindingResult bindingResult) {
+        return userService.registrateNewUser(registerRequest, bindingResult);
     }
 
     /**
@@ -84,10 +74,9 @@ public class ApiAuthController {
      *
      * @param request запрос от клиента.
      * @return информация о текущем авторизованном пользователе, если он авторизован.
-     * @see AuthorizationResponse
      */
     @GetMapping("/check")
-    public ResponseEntity<AuthorizationResponse> check(HttpServletRequest request) {
+    public ResponseEntity<?> check(HttpServletRequest request) {
         return userService.checkAuthorization(request);
     }
 
@@ -98,12 +87,12 @@ public class ApiAuthController {
      * ссылкой на восстановление пароля.
      *
      * @param emailRequest - данные с пользовательской формы ввода.
-     * @return ResponseEntity<AuthorizationResponse>.
      */
     @PostMapping("/restore")
-    public ResponseEntity<AuthorizationResponse> restorePassword(@RequestBody EmailRequest emailRequest) {
-        if (!Strings.isNotEmpty(emailRequest.getEmail())) {
-            return ResponseEntity.ok().body(AuthorizationResponse.builder().result(false).build());
+    public ResponseEntity<?> restorePassword(@Valid @RequestBody EmailRequest emailRequest,
+                                             BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.ok().body(Response.builder().result(false).build());
         }
         return userService.checkAndSendForgotPasswordMail(emailRequest.getEmail());
     }
@@ -114,10 +103,9 @@ public class ApiAuthController {
      * Проверка данных запроса. Изменение пароля пользователя .
      *
      * @param changePasswordRequest - данные с пользовательской формы ввода.
-     * @return ResponseEntity<AuthorizationResponse>.
      */
     @PostMapping("/password")
-    public ResponseEntity<AuthorizationResponse> changePassword(
+    public ResponseEntity<?> changePassword(
             @Valid @RequestBody ChangePasswordRequest changePasswordRequest, BindingResult bindingResult) {
         return userService.changePassword(changePasswordRequest, bindingResult);
     }

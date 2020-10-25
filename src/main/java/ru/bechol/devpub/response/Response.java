@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.Map;
-
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RegistrationResponse {
+public class Response<T> {
 
-    Map<String, String> errors;
-    private boolean result;
+    private final boolean result;
+    private final T user;
+    private final T errors;
+
 }
