@@ -1,5 +1,7 @@
 package ru.bechol.devpub.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import javax.persistence.*;
 import java.util.Set;
 
@@ -12,6 +14,7 @@ public class Tag {
     private long id;
     @Column(nullable = false)
     private String name;
+    @JsonBackReference
     @ManyToMany(mappedBy = "tags")
     private Set<Post> posts;
 }

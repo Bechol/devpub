@@ -1,6 +1,9 @@
 package ru.bechol.devpub.models;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +24,9 @@ import java.util.Set;
  * @see ru.bechol.devpub.repository.UserRepository
  * @see ru.bechol.devpub.service.UserService
  */
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
@@ -44,10 +49,13 @@ public class User implements UserDetails {
     private String forgotCode;
     @Column(name = "photo")
     private String photo;
+    @JsonBackReference
     @OneToMany(mappedBy = "moderator")
     private Set<Post> moderatedPosts;
+    @JsonBackReference
     @OneToMany(mappedBy = "user")
     private Set<Post> posts;
+    @JsonBackReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Vote> votes;
 
