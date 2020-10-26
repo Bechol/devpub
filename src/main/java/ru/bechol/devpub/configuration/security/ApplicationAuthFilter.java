@@ -72,7 +72,7 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
                         .photo(user.getPhoto())
                         .email(user.getEmail())
                         .moderation(user.isModerator())
-                        .moderationCount(user.getModeratedPosts().size())
+                        .moderationCount(0)
                         .settings(user.isModerator()).build()).build();
     }
 
