@@ -38,4 +38,21 @@ public class PostController {
     public ResponseEntity<PostsResponse> allSorted(@RequestParam int offset, @RequestParam int limit, @RequestParam String mode) {
         return postService.findAllSorted(offset, limit, mode);
     }
+
+    /**
+     * Метод search.
+     * GET запрос /api/post/search.
+     * Метод возвращает посты, соответствующие поисковому запросу - строке query.
+     * В случае, если запрос пустой, метод должен выводить все посты.
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода.
+     * @param limit  - количество постов, которое надо вывести.
+     * @param query  -  поисковый запрос.
+     * @return ResponseEntity<PostsResponse>.
+     */
+    @GetMapping("/search")
+    public ResponseEntity<PostsResponse> search(@RequestParam int offset, @RequestParam int limit,
+                                                @RequestParam String query) {
+        return postService.findByQuery(offset, limit, query);
+    }
 }
