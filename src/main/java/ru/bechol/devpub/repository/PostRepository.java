@@ -43,4 +43,18 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
     @Query("from Post as post where post.text like concat('%', :query, '%') and " +
             "post.active=true and post.moderationStatus='ACCEPTED' and post.time <= CURRENT_TIMESTAMP")
     Page<Post> findAllPostsByQuery(Pageable pageable, @Param("query") String query);
+
+    /**
+     * Метод findAllPostsByDate.
+     * Вывод только активных (поле is_active в таблице posts равно 1),
+     * утверждённых модератором (поле moderation_status равно ACCEPTED) постов с датой публикации
+     * не позднее текущего момента, на дату, указанную в параметре query.
+     *
+     * @param pageable
+     * @param date     - дата, на которую необходимо вывести посты.
+     * @return Page<Post>.
+     */
+    @Query("from Post as post where to_char(post.time,'YYYY-MM-DD') = :queryDate and " +
+            "post.active=true and post.moderationStatus='ACCEPTED' and post.time <= CURRENT_TIMESTAMP")
+    Page<Post> findAllPostsByDate(Pageable pageable, @Param("queryDate") String date);
 }

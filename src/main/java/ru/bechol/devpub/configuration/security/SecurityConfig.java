@@ -45,6 +45,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/api/auth/captcha").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/tag").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post/search").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/byDate").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post").permitAll()
                 .anyRequest()
                 .authenticated()

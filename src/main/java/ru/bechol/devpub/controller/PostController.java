@@ -40,7 +40,7 @@ public class PostController {
     }
 
     /**
-     * Метод search.
+     * Метод searchByQuery.
      * GET запрос /api/post/search.
      * Метод возвращает посты, соответствующие поисковому запросу - строке query.
      * В случае, если запрос пустой, метод должен выводить все посты.
@@ -51,8 +51,24 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/search")
-    public ResponseEntity<PostsResponse> search(@RequestParam int offset, @RequestParam int limit,
-                                                @RequestParam String query) {
+    public ResponseEntity<PostsResponse> searchByQuery(@RequestParam int offset, @RequestParam int limit,
+                                                       @RequestParam String query) {
         return postService.findByQuery(offset, limit, query);
+    }
+
+    /**
+     * Метод searchByDate.
+     * GET запрос /api/post/byDate.
+     * Выводит посты за указанную дату, переданную в запросе в параметре date.
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода.
+     * @param limit  - количество постов, которое надо вывести.
+     * @param date   -  дата в формате "YYYY-MM-dd"
+     * @return ResponseEntity<PostsResponse>.
+     */
+    @GetMapping("/byDate")
+    public ResponseEntity<PostsResponse> searchByDate(@RequestParam int offset, @RequestParam int limit,
+                                                      @RequestParam String date) {
+        return postService.findByDate(offset, limit, date);
     }
 }

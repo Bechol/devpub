@@ -79,7 +79,7 @@ public class PostService {
 
     /**
      * Метод prepareResponseResultList.
-     * Форматирование коллекции постов, полученной
+     * Форматирование коллекции постов.
      *
      * @param offset - сдвиг от 0 для постраничного вывода
      * @param limit  - количество постов, которое надо вывести
@@ -103,5 +103,29 @@ public class PostService {
                 .build()).collect(Collectors.toList());
     }
 
-
+    /**
+     * Метод findByDate.
+     * Выводит посты за указанную дату, переданную в запросе в параметре date.
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода
+     * @param limit  - количество постов, которое надо вывести
+     * @param date   - дата, за которую необходимо отобрать посты.
+     * @return - фResponseEntity<PostsResponse>.
+     */
+    public ResponseEntity<PostsResponse> findByDate(int offset, int limit, String date) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        List<Post> postListFromQuery = postRepository.findAllPostsByDate(pageable, date).getContent();
+        List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
+                .id(post.getId())
+                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .title(post.getTitle())
+                .announce(post.getText().substring(0, 100))
+                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
+                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
+                .commentCount(post.getComments().size())
+                .viewCount(post.getViewCount())
+                .user(post.getUser())
+                .build()).collect(Collectors.toList());
+        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+    }
 }
