@@ -71,4 +71,20 @@ public class PostController {
                                                       @RequestParam String date) {
         return postService.findByDate(offset, limit, date);
     }
+
+    /**
+     * Метод searchByTag.
+     * GET запрос /api/post/byDate.
+     * Метод выводит список постов, привязанных к тегу, который был передан методу в качестве параметра tag.
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода.
+     * @param limit  - количество постов, которое надо вывести.
+     * @param tag   -  тег, к которому привязан пост.
+     * @return ResponseEntity<PostsResponse>.
+     */
+    @GetMapping("/byTag")
+    public ResponseEntity<PostsResponse> searchByTag(@RequestParam int offset, @RequestParam int limit,
+                                                      @RequestParam String tag) {
+        return postService.findByTag(offset, limit, tag);
+    }
 }

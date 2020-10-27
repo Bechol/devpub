@@ -128,4 +128,30 @@ public class PostService {
                 .build()).collect(Collectors.toList());
         return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
     }
+
+    /**
+     * Метод findByTag.
+     * Метод выводит список постов, привязанных к тегу, который был передан методу в качестве параметра tag.
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода
+     * @param limit  - количество постов, которое надо вывести
+     * @param tag    - тег, к которому привязаны посты.
+     * @return - ResponseEntity<PostsResponse>.
+     */
+    public ResponseEntity<PostsResponse> findByTag(int offset, int limit, String tag) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        List<Post> postListFromQuery = postRepository.findAllByTag(pageable, tag).getContent();
+        List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
+                .id(post.getId())
+                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .title(post.getTitle())
+                .announce(post.getText().substring(0, 100))
+                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
+                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
+                .commentCount(post.getComments().size())
+                .viewCount(post.getViewCount())
+                .user(post.getUser())
+                .build()).collect(Collectors.toList());
+        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+    }
 }
