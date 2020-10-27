@@ -55,7 +55,7 @@ public class Post {
     private Set<Tag> tags;
 
 
-    private enum ModerationStatus {
+    public enum ModerationStatus {
         NEW, ACCEPTED, DECLINED
     }
 }
