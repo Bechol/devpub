@@ -19,7 +19,6 @@ import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.UserData;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +31,6 @@ import java.util.stream.Collectors;
  *
  * @author Oleg Bech
  * @version 1.0
- * @implements UserDetailsService.
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.models.User
  * @see UserRepository
@@ -125,19 +123,11 @@ public class UserService implements UserDetailsService {
      * Метод checkAuthorization.
      * Проверка авторизации по сессии.
      *
-     * @param request запрос GET /api/auth/check.
+     * @param authorizedUser авторизованный пользователь.
      * @return ResponseEntity.
      */
-    public ResponseEntity<?> checkAuthorization(HttpServletRequest request) {
+    public ResponseEntity<?> checkAuthorization(User authorizedUser) {
         ResponseEntity<?> falseResponse = ResponseEntity.ok().body(Response.builder().result(false).build());
-        if (sessionMap.isEmpty()) {
-            return falseResponse;
-        }
-        Long userId = sessionMap.get(request.getSession().getId());
-        if (userId == null) {
-            return falseResponse;
-        }
-        User authorizedUser = userRepository.findById(userId).orElse(null);
         if (authorizedUser == null) {
             return falseResponse;
         }
@@ -147,7 +137,7 @@ public class UserService implements UserDetailsService {
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())
                         .photo(authorizedUser.getPhoto())
-                        .moderationCount(0)
+                        .moderationCount(0) //todo
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
     }

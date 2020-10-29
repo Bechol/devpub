@@ -2,8 +2,10 @@ package ru.bechol.devpub.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.request.ChangePasswordRequest;
 import ru.bechol.devpub.request.EmailRequest;
 import ru.bechol.devpub.request.RegisterRequest;
@@ -76,8 +78,8 @@ public class ApiAuthController {
      * @return информация о текущем авторизованном пользователе, если он авторизован.
      */
     @GetMapping("/check")
-    public ResponseEntity<?> check(HttpServletRequest request) {
-        return userService.checkAuthorization(request);
+    public ResponseEntity<?> check(@AuthenticationPrincipal User user, HttpServletRequest request) {
+        return userService.checkAuthorization(user);
     }
 
     /**

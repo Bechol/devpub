@@ -1,14 +1,11 @@
 package ru.bechol.devpub.configuration.security;
 
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Класс AppLogoutHandler.
@@ -18,10 +15,7 @@ import java.util.Map;
  * @version 1.0
  * @email oleg071984@gmail.com
  */
-@AllArgsConstructor
 public class AppLogoutHandler implements LogoutSuccessHandler {
-
-    private final Map<String, Long> sessionMap;
 
     /**
      * Метод onLogoutSuccess.
@@ -36,7 +30,6 @@ public class AppLogoutHandler implements LogoutSuccessHandler {
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
                                 Authentication authentication) throws IOException {
-        sessionMap.remove(request.getSession().getId());
         response.setStatus(200);
         response.setContentType("application/json;charset=utf-8");
         response.getWriter().write("{\"result\": true}");
