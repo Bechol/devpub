@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import ru.bechol.devpub.configuration.ServiceAsyncConfig;
 
 import java.util.Properties;
 
@@ -13,7 +14,7 @@ import java.util.Properties;
  *
  * @author Oleg Bech
  * @email oleg071984@gmail.com
- * @see EmailServiceAsyncConfig
+ * @see ServiceAsyncConfig
  * @see ru.bechol.devpub.service.EmailService
  */
 public class EmailSenderConfig {

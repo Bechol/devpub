@@ -7,6 +7,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import ru.bechol.devpub.configuration.ServiceAsyncConfig;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -19,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Oleg Bech
  * @email Oleg071984@gmail.com
  * @see ru.bechol.devpub.configuration.mail.EmailSenderConfig
- * @see ru.bechol.devpub.configuration.mail.EmailServiceAsyncConfig
+ * @see ServiceAsyncConfig
  */
 @Slf4j
 @Service

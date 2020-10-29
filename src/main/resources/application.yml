@@ -21,11 +21,19 @@ spring:
 mail-sender:
   debug: true
   sender-name: DevPub
-  executor:
-    core-pool-size: 2
-    max-pool-size: 4
-    queue-capacity: 200
-    thread-name-prefix: ES-Thread-
+
+async:
+  executors:
+    mail-sender:
+      core-pool-size: 2
+      max-pool-size: 4
+      queue-capacity: 200
+      thread-name-prefix: ES-Thread-
+    post-service:
+      core-pool-size: 1
+      max-pool-size: 2
+      queue-capacity: 200
+      thread-name-prefix: PostSrv-Thread-
 
 #FLYWAY
 flyway:
@@ -54,4 +62,9 @@ captcha:
   storage-limit: 1
 
 time-offset: +03:00 #разница во времени с UTC
+
+announce:
+  string:
+    length: 48
+    end: ...
 
