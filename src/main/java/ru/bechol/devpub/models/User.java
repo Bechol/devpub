@@ -1,6 +1,7 @@
 package ru.bechol.devpub.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -54,18 +55,18 @@ public class User implements UserDetails {
     private Set<Post> moderatedPosts;
     @JsonBackReference
     @OneToMany(mappedBy = "user")
-    private Set<Post> posts;
+    private List<Post> posts;
     @JsonBackReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Vote> votes;
-
+    @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
             joinColumns = {@JoinColumn(name = "user_id")},
             inverseJoinColumns = {@JoinColumn(name = "role_id")}
     )
-    private Set<Role> roles = new HashSet<>();
+    private List<Role> roles;
 
     public boolean isModerator() {
         return this.roles.stream().anyMatch(role -> role.getName().equals("ROLE_MODERATOR"));
@@ -73,7 +74,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return getRoles();
+        return roles;
     }
 
     @Override

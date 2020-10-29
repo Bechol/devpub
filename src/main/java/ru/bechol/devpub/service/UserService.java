@@ -19,10 +19,7 @@ import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.UserData;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -86,7 +83,7 @@ public class UserService implements UserDetailsService {
      * @return пользователь с роллью user.
      */
     private User setUserRole(User user) {
-        Set<Role> userRoles = user.getRoles();
+        List<Role> userRoles = user.getRoles();
         roleRepository.findByName(ROLE_USER).ifPresent(userRoles::add);
         user.setRoles(userRoles);
         return user;

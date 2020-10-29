@@ -3,14 +3,18 @@ package ru.bechol.devpub.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.models.Post;
+import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
+import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.response.PostsResponse;
 
+import java.security.Principal;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
@@ -32,6 +36,8 @@ public class PostService {
     private PostRepository postRepository;
     @Autowired
     private Messages messages;
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Метод findAllSorted
@@ -153,5 +159,56 @@ public class PostService {
                 .user(post.getUser())
                 .build()).collect(Collectors.toList());
         return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+    }
+
+    /**
+     * Метод findMyPosts.
+     * Метод формирует ответ GET запрос /api/post/my.
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода
+     * @param limit  - количество постов, которое надо вывести
+     * @param status - статус модерации.
+     * @return - ResponseEntity<PostsResponse>.
+     */
+
+    public ResponseEntity<PostsResponse> findMyPosts(Principal principal, int offset, int limit, String status) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        User user = userRepository.findByEmail(principal.getName()).orElse(null);
+        List<Post> postList = user.getPosts();
+        switch (status) {
+            case "inactive":
+                postList = postList.stream().filter(post -> !post.isActive()).collect(Collectors.toList());
+                break;
+            case "pending":
+                postList = postList.stream().filter(post ->
+                        post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.NEW))
+                        .collect(Collectors.toList());
+                break;
+            case "declined":
+                postList = postList.stream().filter(post ->
+                        post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.DECLINED))
+                        .collect(Collectors.toList());
+                break;
+            case "published":
+                postList = postList.stream().filter(post ->
+                        post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED))
+                        .collect(Collectors.toList());
+                break;
+            default:
+                log.info("User don't have posts");
+        }
+        List<PostsResponse.PostBody> resultList = postList.stream().map(post -> PostsResponse.PostBody.builder()
+                .id(post.getId())
+                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .title(post.getTitle())
+                .announce(post.getText().substring(0, 100))
+                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
+                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
+                .commentCount(post.getComments().size())
+                .viewCount(post.getViewCount())
+                .user(post.getUser())
+                .build()).collect(Collectors.toList());
+        List<PostsResponse.PostBody> postPages = new PageImpl<>(resultList, pageable, resultList.size()).getContent();
+        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(postPages).build());
     }
 }

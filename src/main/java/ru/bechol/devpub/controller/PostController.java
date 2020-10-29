@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.bechol.devpub.response.PostsResponse;
 import ru.bechol.devpub.service.PostService;
 
+import java.security.Principal;
+
 /**
  * Класс PostController.
  * REST контроллер для обычных запросов не через /api/post.
@@ -79,12 +81,29 @@ public class PostController {
      *
      * @param offset - сдвиг от 0 для постраничного вывода.
      * @param limit  - количество постов, которое надо вывести.
-     * @param tag   -  тег, к которому привязан пост.
+     * @param tag    -  тег, к которому привязан пост.
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/byTag")
     public ResponseEntity<PostsResponse> searchByTag(@RequestParam int offset, @RequestParam int limit,
-                                                      @RequestParam String tag) {
+                                                     @RequestParam String tag) {
         return postService.findByTag(offset, limit, tag);
+    }
+
+    /**
+     * Метод findMyPosts.
+     * GET запрос /api/post/my.
+     * Метод выводит только те посты, которые создал я (в соответствии с полем user_id в таблице posts базы данных).
+     * Возможны 4 типа вывода (см. ниже описания значений параметра status).
+     *
+     * @param offset - сдвиг от 0 для постраничного вывода.
+     * @param limit  - количество постов, которое надо вывести.
+     * @param status -  статус модерации.
+     * @return ResponseEntity<PostsResponse>.
+     */
+    @GetMapping("/my")
+    public ResponseEntity<PostsResponse> findMyPosts(Principal user, @RequestParam int offset,
+                                                     @RequestParam int limit, @RequestParam String status) {
+        return postService.findMyPosts(user, offset, limit, status);
     }
 }

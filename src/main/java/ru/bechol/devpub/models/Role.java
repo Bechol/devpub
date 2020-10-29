@@ -1,14 +1,13 @@
 package ru.bechol.devpub.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -23,9 +22,9 @@ public class Role implements GrantedAuthority {
     @Column(name = "role_name", nullable = false)
     private String name;
 
-    @JsonIgnore
+    @JsonBackReference
     @ManyToMany(mappedBy = "roles", cascade = CascadeType.ALL)
-    private Set<User> users = new HashSet<>();
+    private List<User> users;
 
     @Override
     public String getAuthority() {
