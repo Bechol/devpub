@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import ru.bechol.devpub.models.Post;
+import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
+import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.NewPostRequest;
 import ru.bechol.devpub.response.PostsResponse;
@@ -52,6 +54,54 @@ public class PostService { //todo рефакторинг
     private Messages messages;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private TagService tagService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private RoleRepository roleRepository;
+
+    public Response createNewPost(Principal principal, NewPostRequest newPostRequest,
+                                  BindingResult bindingResult) {
+        User activeUser = userService.findByEmail(principal.getName()).orElse(null);
+        if (activeUser == null) {
+            bindingResult.addError(new FieldError(
+                    "user", "user", messages.getMessage("user.not-found.by-email")));
+        }
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+            return Response.builder().result(false).errors(errorMap).build();
+        }
+        Role role = roleRepository.findByName("ROLE_MODERATOR").orElse(null);
+        Post newPost = new Post();
+        newPost.setTime(this.preparePostCreationTime(newPostRequest.getTimestamp()));
+        newPost.setActive(newPostRequest.isActive());
+        newPost.setTitle(newPostRequest.getTitle());
+        newPost.setText(newPostRequest.getText());
+        newPost.setModerationStatus(Post.ModerationStatus.NEW);
+        newPost.setUser(activeUser);
+        newPost.setModerator(role.getUsers().stream().findFirst().orElse(null));
+        if (newPostRequest.getTags().length > 0) {
+            newPost.setTags(tagService.mapTags(newPostRequest.getTags()));
+        }
+        postRepository.save(newPost);
+        return Response.builder().result(true).build();
+    }
+
+    /**
+     * Метод preparePostCreationTime
+     * Проверяет время публикации поста. В случае, если время публикации раньше текущего времени,
+     * оно автоматически становиться текущим. Если позже текущего - устанавливается введенное значение.
+     *
+     * @param timestamp - введеное время публикации поста.
+     * @return LocalDateTime.
+     */
+    private LocalDateTime preparePostCreationTime(long timestamp) {
+        long now = LocalDateTime.now().toEpochSecond(ZoneOffset.of(clientZoneOffsetId));
+        return timestamp < now ? LocalDateTime.now() :
+                LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
+    }
 
     /**
      * Метод findAllSorted

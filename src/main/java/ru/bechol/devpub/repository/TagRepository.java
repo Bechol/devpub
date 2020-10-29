@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.Tag;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Класс TagRepository.
@@ -30,4 +31,8 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      */
     @Query("from Tag as tag where tag.name like concat(:query, '%')")
     List<Tag> findByQuery(@Param("query") String query);
+
+    Optional<Tag> findByName(String name);
+
+    List<Tag> findAllByNameIn(List<String> tagList);
 }

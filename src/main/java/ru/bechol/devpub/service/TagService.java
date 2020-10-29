@@ -1,5 +1,6 @@
 package ru.bechol.devpub.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,10 @@ import ru.bechol.devpub.repository.TagRepository;
 import ru.bechol.devpub.response.TagResponse;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Класс TagService.
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
  * @see ru.bechol.devpub.models.Tag
  * @see TagRepository
  */
+@Slf4j
 @Service
 public class TagService {
 
@@ -35,6 +39,7 @@ public class TagService {
     /**
      * Метод findAllTagsByQuery.
      * Формирование ответа для GET /api/tag.
+     *
      * @param query - строка запроса для выборки тегов.
      * @return ResponseEntity<TagResponse>.
      */
@@ -48,6 +53,27 @@ public class TagService {
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(TagResponse.builder().tags(tagsNodes).build());
+    }
+
+    /**
+     * Метод checkTags.
+     * Проверка существующих тегов и создание новых из полученной строки.
+     *
+     * @param tagNames -  строка с тегами через запятую.
+     * @return - коллекция тегов
+     */
+    public List<Tag> mapTags(String[] tagNames) {
+        List<Tag> result = new ArrayList<>();
+        Map<String, Tag> existTagsMap = tagRepository.findAllByNameIn(Arrays.asList(tagNames)).stream()
+                .collect(Collectors.toMap(tag -> tag.getName().trim().toLowerCase(), Function.identity()));
+        if (existTagsMap.size() > 0) {
+            existTagsMap.forEach((name, tag) -> result.add(tag));
+            Stream.of(tagNames).filter(name -> !existTagsMap.containsKey(name))
+                    .forEach(name -> result.add(new Tag(name)));
+            return result;
+        }
+        Stream.of(tagNames).forEach(name -> result.add(new Tag(name)));
+        return result;
     }
 
     /**

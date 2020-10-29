@@ -108,4 +108,21 @@ public class PostController {
                                      @RequestParam int limit, @RequestParam String status) {
         return postService.findMyPosts(user, offset, limit, status);
     }
+
+    /**
+     * Метод createNewPost.
+     * GET запрос /api/post/my.
+     * Метод выводит только те посты, которые создал я (в соответствии с полем user_id в таблице posts базы данных).
+     * Возможны 4 типа вывода (см. ниже описания значений параметра status).
+     *
+     * @param newPostRequest - json для создания поста.
+     * @param bindingResult  - результат валидации данных нового поста.
+     * @param principal      - авторизованный пользователь.
+     * @return ResponseEntity<PostsResponse>.
+     */
+    @PostMapping
+    public Response<?> createNewPost(@Valid @RequestBody NewPostRequest newPostRequest,
+                                     BindingResult bindingResult, Principal principal) {
+        return postService.createNewPost(principal, newPostRequest, bindingResult);
+    }
 }

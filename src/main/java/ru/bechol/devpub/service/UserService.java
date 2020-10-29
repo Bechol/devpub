@@ -83,7 +83,7 @@ public class UserService implements UserDetailsService {
      * @return пользователь с роллью user.
      */
     private User setUserRole(User user) {
-        List<Role> userRoles = user.getRoles();
+        List<Role> userRoles = new ArrayList<>();
         roleRepository.findByName(ROLE_USER).ifPresent(userRoles::add);
         user.setRoles(userRoles);
         return user;
