@@ -38,7 +38,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean isModerator;
     @UpdateTimestamp
-    @Column(name = "reg_time", columnDefinition = "timestamp with time zone", nullable = false)
+    @Column(name = "reg_time", columnDefinition = "timestamp", nullable = false)
     private LocalDateTime regTime;
     @Column(nullable = false)
     private String name;

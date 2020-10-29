@@ -26,7 +26,7 @@ public class Vote {
     @JoinColumn(name = "post_id")
     private Post post;
     @CreationTimestamp
-    @Column(name = "time", nullable = false, columnDefinition = "timestamp with time zone")
+    @Column(name = "time", nullable = false, columnDefinition = "timestamp")
     private LocalDateTime time;
     private int value;
 }

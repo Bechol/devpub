@@ -15,6 +15,9 @@ import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.response.PostsResponse;
 
 import java.security.Principal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
@@ -32,6 +35,8 @@ import java.util.stream.Collectors;
 @Service
 public class PostService {
 
+    @Value("${time-offset}")
+    private String clientZoneOffsetId;
     @Autowired
     private PostRepository postRepository;
     @Autowired
@@ -98,7 +103,7 @@ public class PostService {
                 postRepository.findAllPostsUnsorted(pageable).getContent();
         return postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
                 .id(post.getId())
-                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
                 .announce(post.getText().substring(0, 100))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
@@ -123,7 +128,7 @@ public class PostService {
         List<Post> postListFromQuery = postRepository.findAllPostsByDate(pageable, date).getContent();
         List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
                 .id(post.getId())
-                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
                 .announce(post.getText().substring(0, 100))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
@@ -149,7 +154,7 @@ public class PostService {
         List<Post> postListFromQuery = postRepository.findAllByTag(pageable, tag).getContent();
         List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
                 .id(post.getId())
-                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
                 .announce(post.getText().substring(0, 100))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
@@ -199,7 +204,7 @@ public class PostService {
         }
         List<PostsResponse.PostBody> resultList = postList.stream().map(post -> PostsResponse.PostBody.builder()
                 .id(post.getId())
-                .timestamp(post.getTime().toEpochSecond(ZoneOffset.UTC))
+                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
                 .announce(post.getText().substring(0, 100))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())

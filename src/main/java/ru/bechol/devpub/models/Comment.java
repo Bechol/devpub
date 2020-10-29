@@ -30,7 +30,7 @@ public class Comment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     @CreationTimestamp
-    @Column(name = "comment_time", nullable = false, columnDefinition = "timestamp with time zone")
+    @Column(name = "comment_time", nullable = false, columnDefinition = "timestamp")
     private LocalDateTime time;
     @Column(name = "comment_text", nullable = false)
     private String text;

@@ -33,8 +33,7 @@ public class Post {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-    @CreationTimestamp
-    @Column(name = "time", nullable = false, columnDefinition = "timestamp with time zone")
+    @Column(name = "time", nullable = false, columnDefinition = "timestamp")
     private LocalDateTime time;
     @Column(nullable = false)
     private String title;
