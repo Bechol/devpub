@@ -10,20 +10,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import ru.bechol.devpub.service.UserService;
-
-import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    DataSource dataSource;
     @Autowired
     private UserService userDetailsService;
     @Autowired
@@ -32,7 +24,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-        http.rememberMe().rememberMeServices(rememberMeServices()).key("devpub").and();
         http
                 .csrf().disable()
                 .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean()),
@@ -50,23 +41,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
                 .logoutSuccessUrl("/");
-    }
-
-    @Bean
-    public PersistentTokenRepository persistentTokenRepository() {
-        JdbcTokenRepositoryImpl db = new JdbcTokenRepositoryImpl();
-        db.setDataSource(dataSource);
-        return db;
-    }
-
-    @Bean
-    public AbstractRememberMeServices rememberMeServices() {
-        PersistentTokenBasedRememberMeServices rememberMeServices =
-                new PersistentTokenBasedRememberMeServices("devpub", userDetailsService, persistentTokenRepository());
-        rememberMeServices.setAlwaysRemember(true);
-        rememberMeServices.setCookieName("remember-me-devpub");
-        rememberMeServices.setTokenValiditySeconds(86400);
-        return rememberMeServices;
     }
 
     @Override
