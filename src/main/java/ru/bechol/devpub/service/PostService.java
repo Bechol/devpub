@@ -3,16 +3,20 @@ package ru.bechol.devpub.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.UserRepository;
+import ru.bechol.devpub.request.NewPostRequest;
 import ru.bechol.devpub.response.PostsResponse;
+import ru.bechol.devpub.response.Response;
 
 import java.security.Principal;
 import java.time.Instant;
@@ -21,6 +25,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -33,10 +38,14 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class PostService {
+public class PostService { //todo рефакторинг
 
     @Value("${time-offset}")
     private String clientZoneOffsetId;
+    @Value("${announce.string.length}")
+    private int announceStringLength;
+    @Value("${announce.string.end}")
+    private String announceStringEnd;
     @Autowired
     private PostRepository postRepository;
     @Autowired
@@ -53,7 +62,7 @@ public class PostService {
      * @param mode   -  режим вывода (сортировка).
      * @return - ResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostsResponse> findAllSorted(int offset, int limit, String mode) {
+    public PostsResponse findAllSorted(int offset, int limit, String mode) {
         List<PostsResponse.PostBody> resultList = prepareResponseResultList(offset, limit, null);
         switch (mode) {
             case "recent":
@@ -71,7 +80,7 @@ public class PostService {
             default:
                 log.info(messages.getMessage("post.sort-mode.not-defined", mode));
         }
-        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
     }
 
     /**
@@ -83,9 +92,9 @@ public class PostService {
      * @param query  - поисковый запрос.
      * @return ResponseEntity<PostsResponse>
      */
-    public ResponseEntity<PostsResponse> findByQuery(int offset, int limit, String query) {
+    public PostsResponse findByQuery(int offset, int limit, String query) {
         List<PostsResponse.PostBody> resultList = prepareResponseResultList(offset, limit, query);
-        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
     }
 
     /**
@@ -105,7 +114,7 @@ public class PostService {
                 .id(post.getId())
                 .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
-                .announce(post.getText().substring(0, 100))
+                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
@@ -123,21 +132,21 @@ public class PostService {
      * @param date   - дата, за которую необходимо отобрать посты.
      * @return - фResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostsResponse> findByDate(int offset, int limit, String date) {
+    public PostsResponse findByDate(int offset, int limit, String date) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         List<Post> postListFromQuery = postRepository.findAllPostsByDate(pageable, date).getContent();
         List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
                 .id(post.getId())
                 .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
-                .announce(post.getText().substring(0, 100))
+                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
                 .viewCount(post.getViewCount())
                 .user(post.getUser())
                 .build()).collect(Collectors.toList());
-        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
     }
 
     /**
@@ -149,21 +158,21 @@ public class PostService {
      * @param tag    - тег, к которому привязаны посты.
      * @return - ResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostsResponse> findByTag(int offset, int limit, String tag) {
+    public PostsResponse findByTag(int offset, int limit, String tag) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         List<Post> postListFromQuery = postRepository.findAllByTag(pageable, tag).getContent();
         List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
                 .id(post.getId())
                 .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
-                .announce(post.getText().substring(0, 100))
+                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
                 .viewCount(post.getViewCount())
                 .user(post.getUser())
                 .build()).collect(Collectors.toList());
-        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(resultList).build());
+        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
     }
 
     /**
@@ -176,7 +185,7 @@ public class PostService {
      * @return - ResponseEntity<PostsResponse>.
      */
 
-    public ResponseEntity<PostsResponse> findMyPosts(Principal principal, int offset, int limit, String status) {
+    public PostsResponse findMyPosts(Principal principal, int offset, int limit, String status) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         User user = userRepository.findByEmail(principal.getName()).orElse(null);
         List<Post> postList = user.getPosts();
@@ -206,7 +215,7 @@ public class PostService {
                 .id(post.getId())
                 .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
                 .title(post.getTitle())
-                .announce(post.getText().substring(0, 100))
+                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
@@ -214,6 +223,6 @@ public class PostService {
                 .user(post.getUser())
                 .build()).collect(Collectors.toList());
         List<PostsResponse.PostBody> postPages = new PageImpl<>(resultList, pageable, resultList.size()).getContent();
-        return ResponseEntity.ok().body(PostsResponse.builder().count(resultList.size()).posts(postPages).build());
+        return PostsResponse.builder().count(resultList.size()).posts(postPages).build();
     }
 }

@@ -1,14 +1,15 @@
 package ru.bechol.devpub.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import ru.bechol.devpub.request.NewPostRequest;
 import ru.bechol.devpub.response.PostsResponse;
+import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.PostService;
 
+import javax.validation.Valid;
 import java.security.Principal;
 
 /**
@@ -20,6 +21,7 @@ import java.security.Principal;
  */
 @RestController
 @RequestMapping("/api/post")
+@ResponseStatus(HttpStatus.OK)
 public class PostController {
 
     @Autowired
@@ -37,7 +39,7 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping
-    public ResponseEntity<PostsResponse> allSorted(@RequestParam int offset, @RequestParam int limit, @RequestParam String mode) {
+    public PostsResponse allSorted(@RequestParam int offset, @RequestParam int limit, @RequestParam String mode) {
         return postService.findAllSorted(offset, limit, mode);
     }
 
@@ -53,8 +55,8 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/search")
-    public ResponseEntity<PostsResponse> searchByQuery(@RequestParam int offset, @RequestParam int limit,
-                                                       @RequestParam String query) {
+    public PostsResponse searchByQuery(@RequestParam int offset, @RequestParam int limit,
+                                       @RequestParam String query) {
         return postService.findByQuery(offset, limit, query);
     }
 
@@ -69,8 +71,8 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/byDate")
-    public ResponseEntity<PostsResponse> searchByDate(@RequestParam int offset, @RequestParam int limit,
-                                                      @RequestParam String date) {
+    public PostsResponse searchByDate(@RequestParam int offset, @RequestParam int limit,
+                                      @RequestParam String date) {
         return postService.findByDate(offset, limit, date);
     }
 
@@ -85,8 +87,8 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/byTag")
-    public ResponseEntity<PostsResponse> searchByTag(@RequestParam int offset, @RequestParam int limit,
-                                                     @RequestParam String tag) {
+    public PostsResponse searchByTag(@RequestParam int offset, @RequestParam int limit,
+                                     @RequestParam String tag) {
         return postService.findByTag(offset, limit, tag);
     }
 
@@ -102,8 +104,8 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/my")
-    public ResponseEntity<PostsResponse> findMyPosts(Principal user, @RequestParam int offset,
-                                                     @RequestParam int limit, @RequestParam String status) {
+    public PostsResponse findMyPosts(Principal user, @RequestParam int offset,
+                                     @RequestParam int limit, @RequestParam String status) {
         return postService.findMyPosts(user, offset, limit, status);
     }
 }
