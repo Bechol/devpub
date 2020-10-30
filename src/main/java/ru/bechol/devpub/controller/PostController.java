@@ -131,4 +131,21 @@ public class PostController {
                                                      BindingResult bindingResult, Principal principal) {
         return postService.createNewPost(principal, newPostRequest, bindingResult);
     }
+
+    /**
+     * Метод showPost.
+     * GET запрос /api/post/{id}.
+     * Метод выводит данные конкретного поста для отображения на странице поста, в том числе,
+     * список комментариев и тэгов, привязанных к данному посту. Выводит пост в любом случае, если пост активен
+     * (параметр is_active в базе данных равен 1), принят модератором (параметр moderation_status равен ACCEPTED) и
+     * время его публикации (поле timestamp) равно текущему времени или меньше его.
+     *
+     * @param postId    - id поста.
+     * @param principal - авторизованный пользователь.
+     * @return ResponseEntity<Response>.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<PostDto> showPost(@PathVariable(name = "id") long postId, Principal principal) {
+        return postService.showPost(postId, principal);
+    }
 }

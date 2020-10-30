@@ -1,24 +1,25 @@
 package ru.bechol.devpub.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.Role;
+import ru.bechol.devpub.models.Tag;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.NewPostRequest;
-import ru.bechol.devpub.response.PostsResponse;
-import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.response.*;
 
 import java.security.Principal;
 import java.time.Instant;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 @Service
 public class PostService { //todo рефакторинг
 
+    private static final String ROLE_MODERATOR = "ROLE_MODERATOR";
     @Value("${time-offset}")
     private String clientZoneOffsetId;
     @Value("${announce.string.length}")
@@ -61,8 +63,17 @@ public class PostService { //todo рефакторинг
     @Autowired
     private RoleRepository roleRepository;
 
-    public Response createNewPost(Principal principal, NewPostRequest newPostRequest,
-                                  BindingResult bindingResult) {
+    /**
+     * Метод createNewPost.
+     * Создание поста.
+     *
+     * @param principal      - авторизованный пользователь.
+     * @param newPostRequest - данные нового поста.
+     * @param bindingResult  - результаты валидации данных нового поста.
+     * @return - ResponseEntity<Response<?>>.
+     */
+    public ResponseEntity<Response<?>> createNewPost(Principal principal, NewPostRequest newPostRequest,
+                                                     BindingResult bindingResult) {
         User activeUser = userService.findByEmail(principal.getName()).orElse(null);
         if (activeUser == null) {
             bindingResult.addError(new FieldError(
@@ -71,7 +82,7 @@ public class PostService { //todo рефакторинг
         if (bindingResult.hasErrors()) {
             Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
                     .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-            return Response.builder().result(false).errors(errorMap).build();
+            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
         }
         Role role = roleRepository.findByName("ROLE_MODERATOR").orElse(null);
         Post newPost = new Post();
@@ -86,7 +97,7 @@ public class PostService { //todo рефакторинг
             newPost.setTags(tagService.mapTags(newPostRequest.getTags()));
         }
         postRepository.save(newPost);
-        return Response.builder().result(true).build();
+        return ResponseEntity.ok(Response.builder().result(true).build());
     }
 
     /**
@@ -112,25 +123,27 @@ public class PostService { //todo рефакторинг
      * @param mode   -  режим вывода (сортировка).
      * @return - ResponseEntity<PostsResponse>.
      */
-    public PostsResponse findAllSorted(int offset, int limit, String mode) {
-        List<PostsResponse.PostBody> resultList = prepareResponseResultList(offset, limit, null);
+    public PostResponse findAllSorted(int offset, int limit, String mode) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        List<Post> postListFromQuery = postRepository.findAllPostsUnsorted(pageable).getContent();
+        List<PostDto> postDtoList = mapPostList(postListFromQuery, true, false, false);
         switch (mode) {
             case "recent":
-                resultList.sort(Comparator.comparingLong(PostsResponse.PostBody::getTimestamp).reversed());
+                postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp).reversed());
                 break;
             case "popular":
-                resultList.sort(Comparator.comparingLong(PostsResponse.PostBody::getCommentCount).reversed());
+                postDtoList.sort(Comparator.comparingLong(PostDto::getCommentCount).reversed());
                 break;
             case "best":
-                resultList.sort(Comparator.comparingLong(PostsResponse.PostBody::getLikeCount).reversed());
+                postDtoList.sort(Comparator.comparingLong(PostDto::getLikeCount).reversed());
                 break;
             case "early":
-                resultList.sort(Comparator.comparingLong(PostsResponse.PostBody::getTimestamp));
+                postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp));
                 break;
             default:
                 log.info(messages.getMessage("post.sort-mode.not-defined", mode));
         }
-        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
+        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
     }
 
     /**
@@ -142,35 +155,88 @@ public class PostService { //todo рефакторинг
      * @param query  - поисковый запрос.
      * @return ResponseEntity<PostsResponse>
      */
-    public PostsResponse findByQuery(int offset, int limit, String query) {
-        List<PostsResponse.PostBody> resultList = prepareResponseResultList(offset, limit, query);
-        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
+    public PostResponse findByQuery(int offset, int limit, String query) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        Page<Post> postListFromQuery = postRepository.findAllPostsByQuery(pageable, query);
+        List<PostDto> postDtoList = mapPostList(postListFromQuery.getContent(), true, false, false);
+        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
     }
 
     /**
-     * Метод prepareResponseResultList.
-     * Форматирование коллекции постов.
+     * Метод mapPostList.
+     * Формирование коллекции PostDto для ответа сервера.
      *
-     * @param offset - сдвиг от 0 для постраничного вывода
-     * @param limit  - количество постов, которое надо вывести
-     * @return - форматированный список постов для добавления к ответу сервера.
+     * @param postsByQueryList - коллекция постов
+     * @param includeAnnounce  - флаг для включения в ответ краткого содержания поста.
+     * @param includeComments  - флаг для включения в ответ сервера комментариев поста.
+     * @param includeTags      - флаг для включения в ответ сервера тегов.
+     * @return - List<PostDto>
      */
-    private List<PostsResponse.PostBody> prepareResponseResultList(int offset, int limit, String query) {
-        Pageable pageable = PageRequest.of(offset / limit, limit);
-        List<Post> postListFromQuery = Strings.isNotEmpty(query) ?
-                postRepository.findAllPostsByQuery(pageable, query).getContent() :
-                postRepository.findAllPostsUnsorted(pageable).getContent();
-        return postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
+    private List<PostDto> mapPostList(List<Post> postsByQueryList, boolean includeAnnounce,
+                                      boolean includeComments, boolean includeTags) {
+        return postsByQueryList.stream().map(post -> mapPost(post, includeAnnounce, includeComments, includeTags))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Метод mapPost.
+     * Создание объекта PostDto.
+     *
+     * @param post            - пост.
+     * @param includeAnnounce - флаг для включения в ответ краткого содержания поста.
+     * @param includeComments - флаг для включения в ответ сервера комментариев поста.
+     * @param includeTags     - флаг для включения в ответ сервера тегов.
+     * @return - PostDto
+     */
+    private PostDto mapPost(Post post, boolean includeAnnounce, boolean includeComments, boolean includeTags) {
+        return PostDto.builder()
                 .id(post.getId())
+                .active(post.isActive())
                 .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
+                .user(UserDto.builder().id(post.getUser().getId()).name(post.getUser().getName()).build())
                 .title(post.getTitle())
-                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
+                .text(post.getText())
+                .announce(includeAnnounce ? post.getText().substring(0, announceStringLength)
+                        .concat(announceStringEnd) : null)
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
                 .viewCount(post.getViewCount())
-                .user(post.getUser())
-                .build()).collect(Collectors.toList());
+                .comments(includeComments ? mapPostCommentList(post) : null)
+                .tags(includeTags ? mapPostTags(post) : null)
+                .build();
+    }
+
+    /**
+     * Метод mapPostCommentList.
+     * Фформирование списка комментариев к посту.
+     *
+     * @param post - пост.
+     * @return List<CommentDto>.
+     */
+    private List<CommentDto> mapPostCommentList(Post post) {
+        return post.getComments().stream().map(comment -> CommentDto.builder()
+                .id(comment.getId())
+                .timestamp(comment.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
+                .text(comment.getText())
+                .user(UserDto.builder().
+                        id(post.getUser().getId())
+                        .name(post.getUser().getName())
+                        .photo(post.getUser().getPhoto())
+                        .build())
+                .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Метод mapPostTags.
+     * Преобразование имен тегов поста в список.
+     *
+     * @param post - пост.
+     * @return List<String>.
+     */
+    private List<String> mapPostTags(Post post) {
+        return post.getTags().stream().map(Tag::getName).collect(Collectors.toList());
     }
 
     /**
@@ -182,21 +248,11 @@ public class PostService { //todo рефакторинг
      * @param date   - дата, за которую необходимо отобрать посты.
      * @return - фResponseEntity<PostsResponse>.
      */
-    public PostsResponse findByDate(int offset, int limit, String date) {
+    public PostResponse findByDate(int offset, int limit, String date) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         List<Post> postListFromQuery = postRepository.findAllPostsByDate(pageable, date).getContent();
-        List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
-                .id(post.getId())
-                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
-                .title(post.getTitle())
-                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
-                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
-                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
-                .commentCount(post.getComments().size())
-                .viewCount(post.getViewCount())
-                .user(post.getUser())
-                .build()).collect(Collectors.toList());
-        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
+        List<PostDto> postDtoList = mapPostList(postListFromQuery, true, false, false);
+        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
     }
 
     /**
@@ -208,21 +264,11 @@ public class PostService { //todo рефакторинг
      * @param tag    - тег, к которому привязаны посты.
      * @return - ResponseEntity<PostsResponse>.
      */
-    public PostsResponse findByTag(int offset, int limit, String tag) {
+    public PostResponse findByTag(int offset, int limit, String tag) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         List<Post> postListFromQuery = postRepository.findAllByTag(pageable, tag).getContent();
-        List<PostsResponse.PostBody> resultList = postListFromQuery.stream().map(post -> PostsResponse.PostBody.builder()
-                .id(post.getId())
-                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
-                .title(post.getTitle())
-                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
-                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
-                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
-                .commentCount(post.getComments().size())
-                .viewCount(post.getViewCount())
-                .user(post.getUser())
-                .build()).collect(Collectors.toList());
-        return PostsResponse.builder().count(resultList.size()).posts(resultList).build();
+        List<PostDto> postDtoList = mapPostList(postListFromQuery, true, false, false);
+        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
     }
 
     /**
@@ -235,7 +281,7 @@ public class PostService { //todo рефакторинг
      * @return - ResponseEntity<PostsResponse>.
      */
 
-    public PostsResponse findMyPosts(Principal principal, int offset, int limit, String status) {
+    public PostResponse findMyPosts(Principal principal, int offset, int limit, String status) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         User user = userRepository.findByEmail(principal.getName()).orElse(null);
         List<Post> postList = user.getPosts();
@@ -261,18 +307,61 @@ public class PostService { //todo рефакторинг
             default:
                 log.info("User don't have posts");
         }
-        List<PostsResponse.PostBody> resultList = postList.stream().map(post -> PostsResponse.PostBody.builder()
-                .id(post.getId())
-                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
-                .title(post.getTitle())
-                .announce(post.getText().substring(0, announceStringLength).concat(announceStringEnd))
-                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
-                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
-                .commentCount(post.getComments().size())
-                .viewCount(post.getViewCount())
-                .user(post.getUser())
-                .build()).collect(Collectors.toList());
-        List<PostsResponse.PostBody> postPages = new PageImpl<>(resultList, pageable, resultList.size()).getContent();
-        return PostsResponse.builder().count(resultList.size()).posts(postPages).build();
+        List<PostDto> resultList = mapPostList(postList, true, false, false);
+        Page<PostDto> postPages = new PageImpl<>(resultList, pageable, resultList.size());
+        return PostResponse.builder().count(resultList.size()).posts(postPages.getContent()).build();
+    }
+
+    /**
+     * Метод showPost.
+     * Формирование ответа на запрос GET /api/post/{$ID}
+     *
+     * @param postId    - id поста.
+     * @param principal - авторизованный пользователь.
+     * @return ResponseEntity<PostDto>
+     */
+    public ResponseEntity<PostDto> showPost(long postId, Principal principal) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null || !checkPost(post)) {
+            return ResponseEntity.notFound().build();
+        }
+        User activeUser = null;
+        if (principal != null) {
+            activeUser = userRepository.findByEmail(principal.getName()).orElse(null);
+        } else {
+            post = increaseViewCount(post);
+            return ResponseEntity.ok().body(mapPost(post, false, true, true));
+        }
+        boolean isModerator = activeUser.getRoles().stream().anyMatch(role -> role.getName().equals(ROLE_MODERATOR));
+        boolean isAuthor = post.getUser().getId() == activeUser.getId();
+        if (isAuthor || isModerator) {
+            return ResponseEntity.ok(mapPost(post, false, true, true));
+        }
+        post = increaseViewCount(post);
+        return ResponseEntity.ok(mapPost(post, false, true, true));
+    }
+
+    /**
+     * Метод increaseViewCount.
+     * Увеличение количества просмотров поста.
+     *
+     * @param post - пост.
+     * @return Post.
+     */
+    private Post increaseViewCount(Post post) {
+        post.setViewCount(post.getViewCount() + 1);
+        return postRepository.save(post);
+    }
+
+    /**
+     * Метод checkPost.
+     * Проверка поста по условиям: активный, утвержден модератором, опубликован ранее текущей даты и времени.
+     *
+     * @param post -  пост.
+     * @return - true если пост соответствует условиям.
+     */
+    private boolean checkPost(Post post) {
+        return post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED) &&
+                post.getTime().isBefore(LocalDateTime.now());
     }
 }
