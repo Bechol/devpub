@@ -148,4 +148,19 @@ public class PostController {
     public ResponseEntity<PostDto> showPost(@PathVariable(name = "id") long postId, Principal principal) {
         return postService.showPost(postId, principal);
     }
+
+    /**
+     * Метод postsOnModerationэ
+     * GET запрос /api/post/moderation
+     * @param offset - сдвиг от 0 для постраничного вывода.
+     * @param limit - количество постов, которое надо вывести.
+     * @param status -  статус модерации.
+     * @param principal - авторизованный пользователь
+     * @return - PostResponse.
+     */
+    @GetMapping("/moderation")
+    public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
+                                          @RequestParam String status, Principal principal) {
+        return postService.findPostsOnModeration(principal, offset, limit, status);
+    }
 }

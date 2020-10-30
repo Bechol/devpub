@@ -7,6 +7,9 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.Post;
+import ru.bechol.devpub.models.User;
+
+import java.util.List;
 
 /**
  * Класс PostRepository.
@@ -71,4 +74,14 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
     @Query("from Post p where p in (select p from Post as p inner join p.tags as tag with tag.name = :tag group by p)" +
             " and p.active = true AND p.moderationStatus = 'ACCEPTED' AND p.time <= CURRENT_TIMESTAMP")
     Page<Post> findAllByTag(Pageable pageable, @Param("tag") String tag);
+
+    /**
+     * Метод findAllByActiveAndModerator.
+     * Поиск постов по флагу Active и модератору.
+     * @param isActive - флаг active
+     * @param moderator - пользователь с ролью модератора.
+     * @return List<Post>
+     */
+    List<Post> findAllByActiveAndModerator(boolean isActive, User moderator);
+
 }

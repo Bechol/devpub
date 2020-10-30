@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -322,7 +323,7 @@ public class PostService { //todo рефакторинг
      */
     public ResponseEntity<PostDto> showPost(long postId, Principal principal) {
         Post post = postRepository.findById(postId).orElse(null);
-        if (post == null || !checkPost(post)) {
+        if (post == null) {
             return ResponseEntity.notFound().build();
         }
         User activeUser = null;
@@ -354,14 +355,43 @@ public class PostService { //todo рефакторинг
     }
 
     /**
-     * Метод checkPost.
-     * Проверка поста по условиям: активный, утвержден модератором, опубликован ранее текущей даты и времени.
+     * Метод findPostsOnModeration.
+     * Формирование ответа для запроса GET /api/post/moderation
      *
-     * @param post -  пост.
-     * @return - true если пост соответствует условиям.
+     * @param principal - авторизованный пользователь.
+     * @param offset    - сдвиг от 0 для постраничного вывода
+     * @param limit     - количество постов, которое надо вывести
+     * @param status    - статус модерации.
+     * @return PostResponse.
      */
-    private boolean checkPost(Post post) {
-        return post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED) &&
-                post.getTime().isBefore(LocalDateTime.now());
+    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit, String status) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        User moderator = userService.findByEmail(principal.getName()).orElse(null);
+        if (moderator == null) {
+            return PostResponse.builder().count(0).posts(new ArrayList<>()).build();
+        }
+        List<Post> moderatedPosts = postRepository.findAllByActiveAndModerator(true, moderator);
+        List<PostDto> resultList = new ArrayList<>();
+        switch (status) {
+            case "new":
+                resultList = mapPostList(moderatedPosts.stream()
+                        .filter(post -> post.getModerationStatus().equals(Post.ModerationStatus.NEW))
+                        .collect(Collectors.toList()), true, false, false);
+                break;
+            case "accepted":
+                resultList = mapPostList(moderatedPosts.stream()
+                        .filter(post -> post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED))
+                        .collect(Collectors.toList()), true, false, false);
+                break;
+            case "declined":
+                resultList = mapPostList(moderatedPosts.stream()
+                        .filter(post -> post.getModerationStatus().equals(Post.ModerationStatus.DECLINED))
+                        .collect(Collectors.toList()), true, false, false);
+                break;
+            default:
+                log.info(messages.getMessage("post.sort-mode.not-defined"));
+        }
+        Page<PostDto> postPages = new PageImpl<>(resultList, pageable, resultList.size());
+        return PostResponse.builder().count(resultList.size()).posts(postPages.getContent()).build();
     }
 }
