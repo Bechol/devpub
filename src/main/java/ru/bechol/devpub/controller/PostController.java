@@ -170,10 +170,10 @@ public class PostController {
 
     /**
      * Метод likePost
+     * POST запрос /api/post/like
      * Метод сохраняет в таблицу post_votes лайк текущего авторизованного пользователя.
      * В случае повторного лайка возвращает {result: false}. Если до этого этот же пользователь поставил на этот
      * же пост дизлайк, этот дизлайк должен быть заменен на лайк в базе данных.
-     * POST запрос /api/post/like
      * @param postIdRequest - id поста для лайка.
      * @param principal - авторизованный пользователь
      * @return - Response.
@@ -181,6 +181,23 @@ public class PostController {
     @PostMapping("/like")
     @ResponseStatus(HttpStatus.OK)
     public Response<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal) {
-        return voteService.like(postIdRequest, principal);
+        return voteService.vote(postIdRequest, principal, 1);
+    }
+
+    /**
+     * Метод dislikePost
+     * POST запрос /api/post/dislike
+     * Метод сохраняет в таблицу post_votes дизлайк текущего авторизованного пользователя.
+     * В случае повторного дизлайка возвращает {result: false}.
+     * Если до этого этот же пользователь поставил на этот же пост лайк,
+     * этот лайк должен заменен на дизлайк в базе данных.
+     * @param postIdRequest - id поста для лайка.
+     * @param principal - авторизованный пользователь
+     * @return - Response.
+     */
+    @PostMapping("/dislike")
+    @ResponseStatus(HttpStatus.OK)
+    public Response<?> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal) {
+        return voteService.vote(postIdRequest, principal, -1);
     }
 }
