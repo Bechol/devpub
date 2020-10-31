@@ -6,10 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.bechol.devpub.request.NewPostRequest;
+import ru.bechol.devpub.request.PostIdRequest;
 import ru.bechol.devpub.response.PostDto;
 import ru.bechol.devpub.response.PostResponse;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.PostService;
+import ru.bechol.devpub.service.VoteService;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -27,6 +29,8 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+    @Autowired
+    private VoteService voteService;
 
     /**
      * Метод allSorted.
@@ -162,5 +166,21 @@ public class PostController {
     public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
                                           @RequestParam String status, Principal principal) {
         return postService.findPostsOnModeration(principal, offset, limit, status);
+    }
+
+    /**
+     * Метод likePost
+     * Метод сохраняет в таблицу post_votes лайк текущего авторизованного пользователя.
+     * В случае повторного лайка возвращает {result: false}. Если до этого этот же пользователь поставил на этот
+     * же пост дизлайк, этот дизлайк должен быть заменен на лайк в базе данных.
+     * POST запрос /api/post/like
+     * @param postIdRequest - id поста для лайка.
+     * @param principal - авторизованный пользователь
+     * @return - Response.
+     */
+    @PostMapping("/like")
+    @ResponseStatus(HttpStatus.OK)
+    public Response<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal) {
+        return voteService.like(postIdRequest, principal);
     }
 }

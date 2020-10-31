@@ -3,6 +3,7 @@ package ru.bechol.devpub.configuration.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,7 +33,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/*", "index", "/css/*", "/fonts/*", "/img/*", "/js/*").permitAll()
                 .antMatchers("/api/auth/*").permitAll()
                 .antMatchers("/api/*").permitAll()
-                .antMatchers("/api/post/*").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/search/").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/search/").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/byDate").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/byTag").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/byTag").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/post/{id}").permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
