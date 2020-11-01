@@ -2,21 +2,21 @@ package ru.bechol.devpub.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.bechol.devpub.response.GeneralInfoResponse;
 import ru.bechol.devpub.service.GlobalSettingsService;
 
+import java.security.Principal;
 import java.util.Map;
 
 /**
  * Класс DefaultController.
  * REST контроллер для обычных запросов не через API (главная страница - /, в частности)
- * @see GlobalSettingsService
+ *
  * @author Oleg Bech
- * @email oleg071984@gmail.com
  * @version 1.0
+ * @email oleg071984@gmail.com
+ * @see GlobalSettingsService
  */
 @RestController
 @RequestMapping("/api")
@@ -31,6 +31,7 @@ public class DefaultController {
     /**
      * Метод getGeneralInfo.
      * GET запрос /api/init.
+     *
      * @return общая информация о блоге в json формате.
      */
     @GetMapping("/init")
@@ -41,10 +42,24 @@ public class DefaultController {
     /**
      * Метод getGeneralSettings.
      * GET запрос /api/settings
+     *
      * @return глобальные настройки блога из таблицы global_settings.
      */
     @GetMapping("/settings")
     private ResponseEntity<Map<String, Boolean>> getGeneralSettings() {
         return globalSettingsService.createGeneralSettingsMap();
+    }
+
+    /**
+     * Метод updateGeneralSettings.
+     * PUT запрос /api/settings
+     * Метод записывает глобальные настройки блога в таблицу global_settings,
+     * если запрашивающий пользователь авторизован и является модератором.
+     *
+     * @return глобальные настройки блога из таблицы global_settings.
+     */
+    @PutMapping("/settings")
+    private ResponseEntity updateGeneralSettings(@RequestBody Map<String, Boolean> settings, Principal principal) {
+        return globalSettingsService.updateGeneralSettings(settings, principal);
     }
 }
