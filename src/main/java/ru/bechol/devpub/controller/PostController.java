@@ -156,9 +156,10 @@ public class PostController {
     /**
      * Метод postsOnModerationэ
      * GET запрос /api/post/moderation
-     * @param offset - сдвиг от 0 для постраничного вывода.
-     * @param limit - количество постов, которое надо вывести.
-     * @param status -  статус модерации.
+     *
+     * @param offset    - сдвиг от 0 для постраничного вывода.
+     * @param limit     - количество постов, которое надо вывести.
+     * @param status    -  статус модерации.
      * @param principal - авторизованный пользователь
      * @return - PostResponse.
      */
@@ -174,8 +175,9 @@ public class PostController {
      * Метод сохраняет в таблицу post_votes лайк текущего авторизованного пользователя.
      * В случае повторного лайка возвращает {result: false}. Если до этого этот же пользователь поставил на этот
      * же пост дизлайк, этот дизлайк должен быть заменен на лайк в базе данных.
+     *
      * @param postIdRequest - id поста для лайка.
-     * @param principal - авторизованный пользователь
+     * @param principal     - авторизованный пользователь
      * @return - Response.
      */
     @PostMapping("/like")
@@ -191,8 +193,9 @@ public class PostController {
      * В случае повторного дизлайка возвращает {result: false}.
      * Если до этого этот же пользователь поставил на этот же пост лайк,
      * этот лайк должен заменен на дизлайк в базе данных.
+     *
      * @param postIdRequest - id поста для лайка.
-     * @param principal - авторизованный пользователь
+     * @param principal     - авторизованный пользователь
      * @return - Response.
      */
     @PostMapping("/dislike")

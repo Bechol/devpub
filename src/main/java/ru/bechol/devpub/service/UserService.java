@@ -19,6 +19,7 @@ import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.UserData;
 
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -214,6 +215,17 @@ public class UserService implements UserDetailsService {
             errorMap.put("email", message);
         }
         return ResponseEntity.ok().body(Response.builder().result(false).errors(errorMap).build());
+    }
+
+    /**
+     * Метод findActiveUser.
+     * Возврат entity для авторизованного пользователя.
+     *
+     * @param principal - авторизованный пользователь.
+     * @return - User
+     */
+    public User findActiveUser(Principal principal) {
+        return userRepository.findByEmail(principal.getName()).orElse(null);
     }
 
 }

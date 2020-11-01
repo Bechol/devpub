@@ -1,15 +1,28 @@
 package ru.bechol.devpub.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-@Data
+/**
+ * Класс Comment.
+ * Реализация комментария.
+ * Таблица post_comments.
+ *
+ * @author Oleg Bech
+ * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.repository.CommentRepository
+ * @see ru.bechol.devpub.service.CommentService
+ * @see ru.bechol.devpub.controller.CommentController
+ */
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "post_comments")
@@ -25,7 +38,6 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
-    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
