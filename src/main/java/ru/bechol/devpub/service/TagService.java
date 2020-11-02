@@ -62,17 +62,22 @@ public class TagService {
      * @param tagNames -  строка с тегами через запятую.
      * @return - коллекция тегов
      */
-    public List<Tag> mapTags(String[] tagNames) {
-        List<Tag> result = new ArrayList<>();
-        Map<String, Tag> existTagsMap = tagRepository.findAllByNameIn(Arrays.asList(tagNames)).stream()
-                .collect(Collectors.toMap(tag -> tag.getName().trim().toLowerCase(), Function.identity()));
-        if (existTagsMap.size() > 0) {
-            existTagsMap.forEach((name, tag) -> result.add(tag));
-            Stream.of(tagNames).filter(name -> !existTagsMap.containsKey(name))
-                    .forEach(name -> result.add(new Tag(name)));
-            return result;
+    public List<Tag> mapTags(List<String> tagNames) {
+        if (tagNames.size() == 0) {
+            return new ArrayList<>();
         }
-        Stream.of(tagNames).forEach(name -> result.add(new Tag(name)));
+        List<Tag> result = tagRepository.findByNameIn(tagNames);
+        List<Tag> newTags = new ArrayList<>();
+        if (result.size() > 0) {
+            List<String> existsTagNames = result.stream().map(Tag::getName).collect(Collectors.toList());
+            tagNames.stream()
+                    .filter(name -> !existsTagNames.contains(name))
+                    .map(name -> tagRepository.save(new Tag(name)))
+                    .forEach(newTags::add);
+        } else {
+            tagNames.stream().map(name -> tagRepository.save(new Tag(name))).forEach(newTags::add);
+        }
+        result.addAll(newTags);
         return result;
     }
 

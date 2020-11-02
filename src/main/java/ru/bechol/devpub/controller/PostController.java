@@ -125,15 +125,15 @@ public class PostController {
      * Метод выводит только те посты, которые создал я (в соответствии с полем user_id в таблице posts базы данных).
      * Возможны 4 типа вывода (см. ниже описания значений параметра status).
      *
-     * @param newPostRequest - json для создания поста.
-     * @param bindingResult  - результат валидации данных нового поста.
-     * @param principal      - авторизованный пользователь.
+     * @param postRequest   - json для создания поста.
+     * @param bindingResult - результат валидации данных нового поста.
+     * @param principal     - авторизованный пользователь.
      * @return ResponseEntity<PostsResponse>.
      */
     @PostMapping
-    public ResponseEntity<Response<?>> createNewPost(@Valid @RequestBody NewPostRequest newPostRequest,
+    public ResponseEntity<Response<?>> createNewPost(@Valid @RequestBody PostRequest postRequest,
                                                      BindingResult bindingResult, Principal principal) {
-        return postService.createNewPost(principal, newPostRequest, bindingResult);
+        return postService.createNewPost(principal, postRequest, bindingResult);
     }
 
     /**

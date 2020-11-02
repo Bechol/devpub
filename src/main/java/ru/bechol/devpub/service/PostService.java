@@ -18,7 +18,7 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
-import ru.bechol.devpub.request.NewPostRequest;
+import ru.bechol.devpub.request.PostRequest;
 import ru.bechol.devpub.response.*;
 
 import java.security.Principal;
@@ -68,12 +68,12 @@ public class PostService { //todo рефакторинг
      * Метод createNewPost.
      * Создание поста.
      *
-     * @param principal      - авторизованный пользователь.
-     * @param newPostRequest - данные нового поста.
-     * @param bindingResult  - результаты валидации данных нового поста.
+     * @param principal     - авторизованный пользователь.
+     * @param postRequest   - данные нового поста.
+     * @param bindingResult - результаты валидации данных нового поста.
      * @return - ResponseEntity<Response<?>>.
      */
-    public ResponseEntity<Response<?>> createNewPost(Principal principal, NewPostRequest newPostRequest,
+    public ResponseEntity<Response<?>> createNewPost(Principal principal, PostRequest postRequest,
                                                      BindingResult bindingResult) {
         User activeUser = userService.findByEmail(principal.getName()).orElse(null);
         if (activeUser == null) {
@@ -87,15 +87,15 @@ public class PostService { //todo рефакторинг
         }
         Role role = roleRepository.findByName("ROLE_MODERATOR").orElse(null);
         Post newPost = new Post();
-        newPost.setTime(this.preparePostCreationTime(newPostRequest.getTimestamp()));
-        newPost.setActive(newPostRequest.isActive());
-        newPost.setTitle(newPostRequest.getTitle());
-        newPost.setText(newPostRequest.getText());
+        newPost.setTime(this.preparePostCreationTime(postRequest.getTimestamp()));
+        newPost.setActive(postRequest.isActive());
+        newPost.setTitle(postRequest.getTitle());
+        newPost.setText(postRequest.getText());
         newPost.setModerationStatus(Post.ModerationStatus.NEW);
         newPost.setUser(activeUser);
         newPost.setModerator(role.getUsers().stream().findFirst().orElse(null));
-        if (newPostRequest.getTags().length > 0) {
-            newPost.setTags(tagService.mapTags(newPostRequest.getTags()));
+        if (postRequest.getTags().size() > 0) {
+            newPost.setTags(tagService.mapTags(postRequest.getTags()));
         }
         postRepository.save(newPost);
         return ResponseEntity.ok(Response.builder().result(true).build());
