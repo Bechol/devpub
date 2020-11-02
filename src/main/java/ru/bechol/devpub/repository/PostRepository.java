@@ -79,11 +79,10 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * Метод findAllByActiveAndUser.
      * Поиск постов по флагу Active и модератору.
      *
-     * @param isActive - флаг active
      * @param user     - пользователь.
      * @return List<Post>
      */
-    List<Post> findAllByActiveAndUser(boolean isActive, User user);
+    List<Post> findByUserAndActiveTrue(User user);
 
     /**
      * Метод findByModerationStatusAndActiveTrue.

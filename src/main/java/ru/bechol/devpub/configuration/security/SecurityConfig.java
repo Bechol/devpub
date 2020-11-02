@@ -40,6 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/api/post/byTag").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post/byTag").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post/{id}").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/statistics/all").permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()

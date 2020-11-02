@@ -63,6 +63,8 @@ public class UserService implements UserDetailsService {
     private PostService postService;
     @Autowired
     private VoteRepository voteRepository;
+    @Autowired
+    private GlobalSettingsService globalSettingsService;
 
     /**
      * Метод registrateNewUser.
@@ -242,27 +244,48 @@ public class UserService implements UserDetailsService {
 
     /**
      * Метод calculateMyStatistics.
-     * Статичтика по актвным постам авторизованного пользователя.
+     * Статистика по актвным постам авторизованного пользователя.
      *
      * @param principal - авторизованный пользователь.
      * @return StatisticResponse
      */
     public StatisticResponse calculateMyStatistics(Principal principal) {
         User activeUser = findActiveUser(principal);
-        List<Post> postList = postService.findMyActivePosts(activeUser);
+        return this.createStatisticsResponse(activeUser);
+    }
+
+    /**
+     * Метод calculateAllPostsStatistics.
+     * Статистика по всем постам блога.
+     *
+     * @return ResponseEntity<?>
+     */
+    public ResponseEntity<?> calculateAllPostsStatistics() {
+        return ResponseEntity.ok(this.createStatisticsResponse(null));
+    }
+
+    /**
+     * Метод createStatisticsResponse.
+     * Создание отчета по статистике.
+     *
+     * @param activeUser - авторизованный пользователь.
+     * @return StatisticResponse.
+     */
+    private StatisticResponse createStatisticsResponse(User activeUser) {
+        List<Post> postList = activeUser != null ? postService.findMyActivePosts(activeUser) : postService.findAll();
         postList.sort(Comparator.comparing(Post::getTime));
         List<Vote> postsVotes = voteRepository.findByPostIn(postList);
         long postsCount = postList.size();
         long likesCount = postsVotes.stream().filter(vote -> vote.getValue() == 1).count();
         long dislikesCount = postsVotes.stream().filter(vote -> vote.getValue() == -1).count();
         int viewsCount = postList.stream().map(Post::getViewCount).reduce(Integer::sum).orElse(0);
-        long firstPublication = postList.get(0).getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond();
         return StatisticResponse.builder()
                 .postsCount(postsCount)
                 .likesCount(likesCount)
                 .dislikesCount(dislikesCount)
                 .viewsCount(viewsCount)
-                .firstPublication(firstPublication)
+                .firstPublication(!postList.isEmpty() ? postList.get(0).getTime()
+                        .toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond() : 0)
                 .build();
     }
 }

@@ -1,6 +1,7 @@
 package ru.bechol.devpub.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,5 +35,17 @@ public class StatisticsController {
     @GetMapping("/my")
     public StatisticResponse calculateMyStatistics(Principal principal) {
         return userService.calculateMyStatistics(principal);
+    }
+
+    /**
+     * Метод calculateSiteStatistics.
+     * GET запрос /api/statistics/all
+     * Вывод статистики по всем постам блога.
+     *
+     * @return - ResponseEntity.
+     */
+    @GetMapping("/all")
+    public ResponseEntity<?> calculateSiteStatistics() {
+        return userService.calculateAllPostsStatistics();
     }
 }

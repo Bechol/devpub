@@ -451,7 +451,13 @@ public class PostService { //todo рефакторинг
 
 
     public List<Post> findMyActivePosts(User user) {
-        List<Post> result = postRepository.findAllByActiveAndUser(true, user);
+        List<Post> result = postRepository.findByUserAndActiveTrue(user);
         return result != null && !result.isEmpty() ? result : new ArrayList<>();
+    }
+
+    public List<Post> findAll() {
+        List<Post> result = new ArrayList<>();
+        postRepository.findAll().forEach(result::add);
+        return result;
     }
 }
