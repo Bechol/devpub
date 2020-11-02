@@ -76,12 +76,32 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
     Page<Post> findAllByTag(Pageable pageable, @Param("tag") String tag);
 
     /**
-     * Метод findAllByActiveAndModerator.
+     * Метод findAllByActiveAndUser.
      * Поиск постов по флагу Active и модератору.
+     *
      * @param isActive - флаг active
-     * @param moderator - пользователь с ролью модератора.
+     * @param user     - пользователь.
      * @return List<Post>
      */
-    List<Post> findAllByActiveAndModerator(boolean isActive, User moderator);
+    List<Post> findAllByActiveAndUser(boolean isActive, User user);
+
+    /**
+     * Метод findByModerationStatusAndActiveTrue.
+     * Выборка активных постов по статусу модерации.
+     *
+     * @param moderationStatus - статус поста.
+     * @return List<Post>
+     */
+    List<Post> findByModerationStatusAndActiveTrue(Post.ModerationStatus moderationStatus);
+
+    /**
+     * Метод findByModerationStatusAndActiveTrue.
+     * Выборка активных постов, прошедших модерацию у авторизованного модератора.
+     *
+     * @param moderationStatus - статус поста.
+     * @param moderator        - авторизованный модератор.
+     * @return List<Post>
+     */
+    List<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, Post.ModerationStatus moderationStatus);
 
 }

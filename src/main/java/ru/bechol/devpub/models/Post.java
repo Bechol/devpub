@@ -31,6 +31,10 @@ public class Post {
     private User moderator;
     @JsonManagedReference
     @ManyToOne
+    @JoinColumn(name = "moderated_by")
+    private User moderatedBy;
+    @JsonManagedReference
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
     @Column(name = "time", nullable = false, columnDefinition = "timestamp")

@@ -59,6 +59,7 @@ create table posts (
     is_active boolean not null,
     moderation_status moderation_status,
     moderator_id int8 null,
+    moderated_by int8 null,
     user_id int8 not null,
     time timestamp not null,
     title varchar(255) not null,
@@ -66,6 +67,7 @@ create table posts (
     view_count int4 not null,
     primary key (id),
     constraint fk_moderators foreign key (moderator_id) references users (id),
+    constraint fk_moderated_by foreign key (moderated_by) references users (id),
     constraint fk_users foreign key (user_id) references users (id)
 );
 

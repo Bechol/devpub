@@ -371,23 +371,22 @@ public class PostService { //todo рефакторинг
         if (moderator == null) {
             return PostResponse.builder().count(0).posts(new ArrayList<>()).build();
         }
-        List<Post> moderatedPosts = postRepository.findAllByActiveAndModerator(true, moderator);
         List<PostDto> resultList = new ArrayList<>();
         switch (status) {
-            case "new":
-                resultList = mapPostList(moderatedPosts.stream()
-                        .filter(post -> post.getModerationStatus().equals(Post.ModerationStatus.NEW))
-                        .collect(Collectors.toList()), true, false, false);
+            case "new": //все активные посты со статусом "НОВЫЙ"
+                resultList = mapPostList(postRepository.findByModerationStatusAndActiveTrue(Post.ModerationStatus.NEW),
+                        true, false, false);
                 break;
-            case "accepted":
-                resultList = mapPostList(moderatedPosts.stream()
-                        .filter(post -> post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED))
-                        .collect(Collectors.toList()), true, false, false);
+            case "accepted": //все активные, утвержденные мной посты
+                resultList = mapPostList(postRepository
+                                .findByModeratedByAndModerationStatusAndActiveTrue(moderator,
+                                        Post.ModerationStatus.ACCEPTED),
+                        true, false, false);
                 break;
-            case "declined":
-                resultList = mapPostList(moderatedPosts.stream()
-                        .filter(post -> post.getModerationStatus().equals(Post.ModerationStatus.DECLINED))
-                        .collect(Collectors.toList()), true, false, false);
+            case "declined": //все активные, отклоненные мной посты
+                resultList = mapPostList(postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
+                        Post.ModerationStatus.DECLINED),
+                        true, false, false);
                 break;
             default:
                 log.info(messages.getMessage("post.sort-mode.not-defined"));
@@ -399,9 +398,10 @@ public class PostService { //todo рефакторинг
     /**
      * Метод editPost.
      * Редактирование поста.
+     *
      * @param editPostRequest - тело запроса.
-     * @param postId - id поста.
-     * @param principal - авторизованный пользователь.
+     * @param postId          - id поста.
+     * @param principal       - авторизованный пользователь.
      * @return - ResponseEntity<?>.
      */
     public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal) {
@@ -425,8 +425,9 @@ public class PostService { //todo рефакторинг
     /**
      * Метод moderatePost.
      * Модерация поста.
+     *
      * @param moderationRequest - тело запроса.
-     * @param principal - авторизованный пользователь.
+     * @param principal         - авторизованный пользователь.
      * @return Response.
      */
     public Response moderatePost(ModerationRequest moderationRequest, Principal principal) {
@@ -443,6 +444,7 @@ public class PostService { //todo рефакторинг
         } else {
             post.setModerationStatus(Post.ModerationStatus.DECLINED);
         }
+        post.setModeratedBy(activeUser);
         postRepository.save(post);
         return Response.builder().result(true).build();
     }

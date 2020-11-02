@@ -54,6 +54,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "moderator")
     private Set<Post> moderatedPosts;
     @JsonBackReference
+    @OneToMany(mappedBy = "moderatedBy")
+    private Set<Post> moderatedByPosts;
+    @JsonBackReference
     @OneToMany(mappedBy = "user")
     private List<Post> posts;
     @JsonBackReference
