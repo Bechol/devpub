@@ -394,4 +394,22 @@ public class PostService { //todo рефакторинг
         Page<PostDto> postPages = new PageImpl<>(resultList, pageable, resultList.size());
         return PostResponse.builder().count(resultList.size()).posts(postPages.getContent()).build();
     }
+
+    public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal) {
+        User activeUser = userService.findActiveUser(principal);
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null || activeUser == null) {
+            return ResponseEntity.ok(Response.builder().result(false).build());
+        }
+        post.setActive(editPostRequest.isActive());
+        post.setTitle(editPostRequest.getTitle());
+        post.setText(editPostRequest.getText());
+        post.setTime(this.preparePostCreationTime(editPostRequest.getTimestamp()));
+        post.setTags(tagService.mapTags(editPostRequest.getTags()));
+        if (!activeUser.isModerator()) {
+            post.setModerationStatus(Post.ModerationStatus.NEW);
+        }
+        postRepository.save(post);
+        return ResponseEntity.ok(Response.builder().result(true).build());
+    }
 }

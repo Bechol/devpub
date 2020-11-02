@@ -4,9 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import ru.bechol.devpub.request.NewPostRequest;
 import ru.bechol.devpub.request.PostIdRequest;
+import ru.bechol.devpub.request.PostRequest;
 import ru.bechol.devpub.response.PostDto;
 import ru.bechol.devpub.response.PostResponse;
 import ru.bechol.devpub.response.Response;
@@ -15,6 +16,8 @@ import ru.bechol.devpub.service.VoteService;
 
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Класс PostController.
@@ -152,6 +155,28 @@ public class PostController {
     public ResponseEntity<PostDto> showPost(@PathVariable(name = "id") long postId, Principal principal) {
         return postService.showPost(postId, principal);
     }
+
+    /**
+     * Метод editPost.
+     * PUT запрос /api/post/{id}.
+     * Метод изменяет данные поста с идентификатором ID на те, которые пользователь ввёл в форму публикации.
+     * @param editPostRequest - тело запроса.
+     * @param bindingResult - результаты валидации данных пользовательской формы.
+     * @param postId    - id поста.
+     * @param principal - авторизованный пользователь.
+     * @return ResponseEntity<Response>.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
+                                      @PathVariable("id") long postId, Principal principal) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
+        }
+        return postService.editPost(editPostRequest, postId, principal);
+    }
+
 
     /**
      * Метод postsOnModerationэ
