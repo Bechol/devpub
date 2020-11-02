@@ -18,6 +18,7 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
+import ru.bechol.devpub.request.ModerationRequest;
 import ru.bechol.devpub.request.PostRequest;
 import ru.bechol.devpub.response.*;
 
@@ -395,6 +396,14 @@ public class PostService { //todo рефакторинг
         return PostResponse.builder().count(resultList.size()).posts(postPages.getContent()).build();
     }
 
+    /**
+     * Метод editPost.
+     * Редактирование поста.
+     * @param editPostRequest - тело запроса.
+     * @param postId - id поста.
+     * @param principal - авторизованный пользователь.
+     * @return - ResponseEntity<?>.
+     */
     public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal) {
         User activeUser = userService.findActiveUser(principal);
         Post post = postRepository.findById(postId).orElse(null);
@@ -411,5 +420,30 @@ public class PostService { //todo рефакторинг
         }
         postRepository.save(post);
         return ResponseEntity.ok(Response.builder().result(true).build());
+    }
+
+    /**
+     * Метод moderatePost.
+     * Модерация поста.
+     * @param moderationRequest - тело запроса.
+     * @param principal - авторизованный пользователь.
+     * @return Response.
+     */
+    public Response moderatePost(ModerationRequest moderationRequest, Principal principal) {
+        User activeUser = userService.findActiveUser(principal);
+        if (activeUser == null || !activeUser.isModerator()) {
+            return Response.builder().result(false).build();
+        }
+        Post post = postRepository.findById(moderationRequest.getPostId()).orElse(null);
+        if (post == null) {
+            return Response.builder().result(false).build();
+        }
+        if (moderationRequest.getDecision().equals("accept")) {
+            post.setModerationStatus(Post.ModerationStatus.ACCEPTED);
+        } else {
+            post.setModerationStatus(Post.ModerationStatus.DECLINED);
+        }
+        postRepository.save(post);
+        return Response.builder().result(true).build();
     }
 }
