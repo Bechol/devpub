@@ -10,6 +10,7 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 /**
  * Класс RoleRepository.
@@ -36,4 +37,13 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     @Modifying
     @Query("delete from Vote v where v.user=:user and v.post=:post and v.value=:value ")
     void deleteByPostAndUserAndValue(@Param("post") Post post, @Param("user") User user, @Param("value") int value);
+
+    /**
+     * Метод findByPostIn.
+     * Выборка всех лайков и дизлайков в коллекции постов.
+     *
+     * @param posts - коллекция постов для поиска.
+     * @return List<Vote>
+     */
+    List<Vote> findByPostIn(List<Post> posts);
 }

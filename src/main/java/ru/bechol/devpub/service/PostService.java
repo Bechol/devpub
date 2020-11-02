@@ -448,4 +448,10 @@ public class PostService { //todo рефакторинг
         postRepository.save(post);
         return Response.builder().result(true).build();
     }
+
+
+    public List<Post> findMyActivePosts(User user) {
+        List<Post> result = postRepository.findAllByActiveAndUser(true, user);
+        return result != null && !result.isEmpty() ? result : new ArrayList<>();
+    }
 }

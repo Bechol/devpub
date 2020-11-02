@@ -1,6 +1,7 @@
 package ru.bechol.devpub.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,16 +11,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
+import ru.bechol.devpub.models.Vote;
 import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
+import ru.bechol.devpub.repository.VoteRepository;
 import ru.bechol.devpub.request.ChangePasswordRequest;
 import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.response.StatisticResponse;
 import ru.bechol.devpub.response.UserData;
 
 import java.security.Principal;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,6 +43,8 @@ import java.util.stream.Collectors;
 public class UserService implements UserDetailsService {
 
     private final static String ROLE_USER = "ROLE_USER";
+    @Value("${time-offset}")
+    private String clientZoneOffsetId;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -51,6 +59,10 @@ public class UserService implements UserDetailsService {
     private EmailService emailService;
     @Autowired
     private CaptchaCodesService captchaCodesService;
+    @Autowired
+    private PostService postService;
+    @Autowired
+    private VoteRepository voteRepository;
 
     /**
      * Метод registrateNewUser.
@@ -228,4 +240,29 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(principal.getName()).orElse(null);
     }
 
+    /**
+     * Метод calculateMyStatistics.
+     * Статичтика по актвным постам авторизованного пользователя.
+     *
+     * @param principal - авторизованный пользователь.
+     * @return StatisticResponse
+     */
+    public StatisticResponse calculateMyStatistics(Principal principal) {
+        User activeUser = findActiveUser(principal);
+        List<Post> postList = postService.findMyActivePosts(activeUser);
+        postList.sort(Comparator.comparing(Post::getTime));
+        List<Vote> postsVotes = voteRepository.findByPostIn(postList);
+        long postsCount = postList.size();
+        long likesCount = postsVotes.stream().filter(vote -> vote.getValue() == 1).count();
+        long dislikesCount = postsVotes.stream().filter(vote -> vote.getValue() == -1).count();
+        int viewsCount = postList.stream().map(Post::getViewCount).reduce(Integer::sum).orElse(0);
+        long firstPublication = postList.get(0).getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond();
+        return StatisticResponse.builder()
+                .postsCount(postsCount)
+                .likesCount(likesCount)
+                .dislikesCount(dislikesCount)
+                .viewsCount(viewsCount)
+                .firstPublication(firstPublication)
+                .build();
+    }
 }
