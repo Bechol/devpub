@@ -49,6 +49,12 @@ default:
   copyright: Дмитрий Сергеев
   copyrightFrom: 2005
 
+#Cloudinary
+cloudinary:
+  cloud-name: hg7rd5cd5
+  apikey: 556696283735317
+  api-secret: sMG-S3M4UU7v9oi5D5F0YGnkyRI
+
 #Captcha
 captcha:
   image:
@@ -67,4 +73,10 @@ announce:
   string:
     length: 48
     end: ...
+
+#Local storage
+storage:
+  max-size: 200000
+  root:
+    location: tmp_storage
 
