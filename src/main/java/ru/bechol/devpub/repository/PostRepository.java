@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 
+import javax.persistence.Tuple;
 import java.util.List;
 
 /**
@@ -79,7 +80,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * Метод findAllByActiveAndUser.
      * Поиск постов по флагу Active и модератору.
      *
-     * @param user     - пользователь.
+     * @param user - пользователь.
      * @return List<Post>
      */
     List<Post> findByUserAndActiveTrue(User user);
@@ -103,4 +104,22 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      */
     List<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, Post.ModerationStatus moderationStatus);
 
+    /**
+     * Метод findAllYearsWithPosts.
+     * Подготовка списка "годов", за которые была создана хотя бы одна публикация.
+     *
+     * @return List<String>.
+     */
+    @Query("select year(p.time) from Post p group by year(p.time)")
+    List<String> findAllYearsWithPosts();
+
+    /**
+     * Метод agregatePostsByYear.
+     * Агрегация постов по дате за год. В ответ включена дата и количество постов с этой датой.
+     *
+     * @param year - год для выборки.
+     * @return List<Tuple>
+     */
+    @Query("select to_char(p.time, 'YYYY-MM-DD') as date, count(p) as count from Post p where year(p.time) = :year group by date")
+    List<Tuple> agregatePostsByYear(@Param("year") Integer year);
 }

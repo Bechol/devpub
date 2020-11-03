@@ -1,6 +1,7 @@
 package ru.bechol.devpub.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -459,5 +460,21 @@ public class PostService { //todo рефакторинг
         List<Post> result = new ArrayList<>();
         postRepository.findAll().forEach(result::add);
         return result;
+    }
+
+    /**
+     * Метод createCalendarData.
+     * Метод выводит количества публикаций на каждую дату переданного в параметре year года или текущего года,
+     * если параметр year не задан. В параметре years всегда возвращается список всех годов, з
+     * а которые была хотя бы одна публикация, в порядке возврастания.
+     * @param year - год.
+     * @return CalendarResponse.
+     */
+    public CalendarResponse createCalendarData(String year) {
+        String queryYear = Strings.isNotEmpty(year) ? year : String.valueOf(LocalDateTime.now().getYear());
+        List<String> years = postRepository.findAllYearsWithPosts();
+        Map<String, Long> resultMap = postRepository.agregatePostsByYear(Integer.parseInt(queryYear)).stream()
+                .collect(Collectors.toMap(t -> t.get(0, String.class), t -> t.get(1, Long.class)));
+        return CalendarResponse.builder().years(years).posts(resultMap).build();
     }
 }
