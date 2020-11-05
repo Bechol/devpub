@@ -82,7 +82,7 @@ public class UserService implements UserDetailsService {
             return createResponseWithErrorMap(bindingResult);
         }
         User user = new User();
-        user.setEmail(registerRequest.getE_mail());
+        user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
         user.setModerator(false);
@@ -224,10 +224,6 @@ public class UserService implements UserDetailsService {
     private ResponseEntity<?> createResponseWithErrorMap(BindingResult bindingResult) {
         Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
                 .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-        if (errorMap.containsKey("e_mail")) {
-            String message = errorMap.remove("e_mail");
-            errorMap.put("email", message);
-        }
         return ResponseEntity.ok().body(Response.builder().result(false).errors(errorMap).build());
     }
 

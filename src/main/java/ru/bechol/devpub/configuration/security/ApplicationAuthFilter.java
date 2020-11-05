@@ -1,5 +1,6 @@
 package ru.bechol.devpub.configuration.security;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,10 +78,8 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
     @Data
     private static class UserCredentials {
 
-        private String e_mail, password;
-
-        String getEmail() {
-            return e_mail;
-        }
+        @JsonProperty("e_mail")
+        private String email;
+        private String password;
     }
 }

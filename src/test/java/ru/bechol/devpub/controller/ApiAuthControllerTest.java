@@ -52,7 +52,7 @@ public class ApiAuthControllerTest extends AbstractControllerTest {
     @Test
     public void whenRegistrationFormDataInvalidThenGetResponseWithErrors() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setE_mail("mail.mail.ru");
+        registerRequest.setEmail("mail.mail.ru");
         registerRequest.setName("");
         registerRequest.setCaptcha("asdb3n");
         registerRequest.setCaptcha_secret(UUID.randomUUID().toString());
