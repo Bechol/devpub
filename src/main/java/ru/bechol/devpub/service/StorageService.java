@@ -3,6 +3,7 @@ package ru.bechol.devpub.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,6 +53,9 @@ public class StorageService {
     @Value("${storage.max-size}")
     private long maximumFileSize;
 
+    @Value("${storage.image.allowed-formats}")
+    private List<String> allowedImageFormats;
+
     /**
      * Метод uploadFile.
      * Загрузка изображений на Cloudinary.
@@ -60,8 +65,11 @@ public class StorageService {
      */
     public ResponseEntity<?> uploadFile(MultipartFile file) {
         Map<String, String> errorMap = new HashMap<>();
+        if (!this.checkImageFormat(file)) {
+            errorMap.put("image-format", messages.getMessage("er.image-format", allowedImageFormats));
+        }
         if (file.getSize() > maximumFileSize) {
-            errorMap.put("image", messages.getMessage("er.image-size", maximumFileSize / 1000, "KB"));
+            errorMap.put("image-size", messages.getMessage("er.image-size", maximumFileSize / 1000, "KB"));
         }
         if (!errorMap.isEmpty()) {
             return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
@@ -99,5 +107,17 @@ public class StorageService {
         fileOutputStream.write(file.getBytes());
         fileOutputStream.close();
         return convFile;
+    }
+
+    /**
+     * Метод checkImageFormat.
+     * Проверка формата изображения.
+     *
+     * @param file - загружаемый файл картинки.
+     * @return - true, если формат загружаемой картинки найден среди указанных в настройках приложения.
+     */
+    private boolean checkImageFormat(MultipartFile file) {
+        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+        return allowedImageFormats.contains(extension);
     }
 }

@@ -76,7 +76,9 @@ announce:
 
 #Local storage
 storage:
-  max-size: 200000
+  max-size: 200000 #в байтах
   root:
     location: tmp_storage
+  image:
+    allowed-formats: jpg, png
 
