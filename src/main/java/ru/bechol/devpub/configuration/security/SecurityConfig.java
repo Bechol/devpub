@@ -33,7 +33,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean(), postService),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
-                .antMatchers("/*", "index", "/css/*", "/fonts/*", "/img/*", "/js/*").permitAll()
+                .antMatchers("/*", "index", "/login/**", "/css/*", "/fonts/*", "/img/*", "/js/*").permitAll()
                 .antMatchers("/api/auth/*").permitAll()
                 .antMatchers("/api/*").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post").permitAll()
