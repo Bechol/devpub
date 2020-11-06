@@ -12,6 +12,6 @@ public class UserData {
     private String photo;
     private String email;
     private boolean moderation;
-    private int moderationCount;
+    private long moderationCount;
     private boolean settings;
 }

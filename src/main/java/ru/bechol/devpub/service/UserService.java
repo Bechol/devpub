@@ -149,7 +149,7 @@ public class UserService implements UserDetailsService {
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())
                         .photo(authorizedUser.getPhotoLink())
-                        .moderationCount(0) //todo
+                        .moderationCount(postService.findPostsByStatus(Post.ModerationStatus.NEW))
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
     }

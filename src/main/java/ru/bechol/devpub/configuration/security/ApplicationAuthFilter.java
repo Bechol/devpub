@@ -11,9 +11,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.UserData;
+import ru.bechol.devpub.service.PostService;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -24,12 +26,14 @@ import java.util.Collections;
 public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
+    private final PostService postService;
 
     @Autowired
-    public ApplicationAuthFilter(AuthenticationManager authenticationManager) {
+    public ApplicationAuthFilter(AuthenticationManager authenticationManager, PostService postService) {
         this.authenticationManager = authenticationManager;
         this.setRequiresAuthenticationRequestMatcher(
                 new AntPathRequestMatcher("/api/auth/login", "POST"));
+        this.postService = postService;
     }
 
     @Override
@@ -71,7 +75,7 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
                         .photo(user.getPhotoLink())
                         .email(user.getEmail())
                         .moderation(user.isModerator())
-                        .moderationCount(0)
+                        .moderationCount(user.isModerator() ? postService.findPostsByStatus(Post.ModerationStatus.NEW) : 0)
                         .settings(user.isModerator()).build()).build();
     }
 

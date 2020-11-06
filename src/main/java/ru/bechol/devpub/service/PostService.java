@@ -477,4 +477,9 @@ public class PostService { //todo рефакторинг
                 .collect(Collectors.toMap(t -> t.get(0, String.class), t -> t.get(1, Long.class)));
         return CalendarResponse.builder().years(years).posts(resultMap).build();
     }
+
+    public long findPostsByStatus(Post.ModerationStatus moderationStatus) {
+        List<Post> newPosts = postRepository.findByModerationStatusAndActiveTrue(moderationStatus);
+        return !newPosts.isEmpty() ? newPosts.size() : 0;
+    }
 }

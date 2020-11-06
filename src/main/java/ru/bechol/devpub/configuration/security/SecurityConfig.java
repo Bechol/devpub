@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ru.bechol.devpub.service.PostService;
 import ru.bechol.devpub.service.UserService;
 
 @Configuration
@@ -21,13 +22,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private UserService userDetailsService;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PostService postService;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
         http
                 .csrf().disable()
-                .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean()),
+                .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean(), postService),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/*", "index", "/css/*", "/fonts/*", "/img/*", "/js/*").permitAll()
