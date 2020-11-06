@@ -31,6 +31,7 @@ create table users (
     password varchar(255) not null,
     code varchar(255) null,
     photo varchar(255) null,
+    photo_public_id varchar(255) null,
     primary key (id)
 );
 

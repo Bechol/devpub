@@ -49,7 +49,9 @@ public class User implements UserDetails {
     @Column(name = "code")
     private String forgotCode;
     @Column(name = "photo")
-    private String photo;
+    private String photoLink;
+    @Column(name = "photo_public_id")
+    private String photoPublicId;
     @JsonBackReference
     @OneToMany(mappedBy = "moderator")
     private Set<Post> moderatedPosts;

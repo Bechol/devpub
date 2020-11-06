@@ -225,7 +225,7 @@ public class PostService { //todo рефакторинг
                 .user(UserDto.builder().
                         id(post.getUser().getId())
                         .name(post.getUser().getName())
-                        .photo(post.getUser().getPhoto())
+                        .photo(post.getUser().getPhotoLink())
                         .build())
                 .build())
                 .collect(Collectors.toList());

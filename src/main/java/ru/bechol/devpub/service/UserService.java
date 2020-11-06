@@ -148,7 +148,7 @@ public class UserService implements UserDetailsService {
                         .id(authorizedUser.getId())
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())
-                        .photo(authorizedUser.getPhoto())
+                        .photo(authorizedUser.getPhotoLink())
                         .moderationCount(0) //todo
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());

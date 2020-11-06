@@ -2,6 +2,8 @@ package ru.bechol.devpub.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,16 +77,30 @@ public class StorageService {
             return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
         }
         try {
-            File uploadedFile = convertMultiPartToFile(file);
-            Map uploadResult = cloudinary.uploader().upload(uploadedFile, ObjectUtils.emptyMap());
-            String result = (String) uploadResult.get("secure_url");
             FileSystemUtils.deleteRecursively(Paths.get(uploadPath));
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(sendToCloudinary(file).getSecureUrl());
         } catch (IOException | NullPointerException exception) {
             log.error(exception.getMessage());
             errorMap.put("file", exception.getMessage());
             return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
         }
+    }
+
+    /**
+     * Метод sendToCloudinary.
+     * Отправка/загрузка файла картинки на cloudinary.
+     *
+     * @param file - файл загруженный с пользоваельской формы.
+     * @return - CloudinaryResult
+     * @throws IOException
+     */
+    public CloudinaryResult sendToCloudinary(MultipartFile file) throws IOException {
+        File uploadedFile = convertMultiPartToFile(file);
+        Map uploadResult = cloudinary.uploader().upload(uploadedFile, ObjectUtils.emptyMap());
+        return CloudinaryResult.builder()
+                .secureUrl((String) uploadResult.get("secure_url"))
+                .publicId((String) uploadResult.get("public_id"))
+                .build();
     }
 
     /**
@@ -119,5 +135,20 @@ public class StorageService {
     private boolean checkImageFormat(MultipartFile file) {
         String extension = FilenameUtils.getExtension(file.getOriginalFilename());
         return allowedImageFormats.contains(extension);
+    }
+
+    /**
+     * Класс CloudinaryResult.
+     * Десериализация ответа от cloudinary.
+     *
+     * @author Oleg Bech
+     * @version 1.0
+     * @email oleg071984@gmail.com
+     */
+    @Getter
+    @Builder
+    public static class CloudinaryResult {
+        private String secureUrl;
+        private String publicId;
     }
 }

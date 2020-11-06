@@ -68,7 +68,7 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
                 .user(UserData.builder()
                         .id(user.getId())
                         .name(user.getName())
-                        .photo(user.getPhoto())
+                        .photo(user.getPhotoLink())
                         .email(user.getEmail())
                         .moderation(user.isModerator())
                         .moderationCount(0)

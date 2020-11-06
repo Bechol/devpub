@@ -35,4 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Optional<User>.
      */
     Optional<User> findByForgotCode(String code);
+
+    /**
+     * Метод findByName.
+     * Поиск пользователя по имени.
+     *
+     * @param name - имя для поиска.
+     * @return Optional<User>.
+     */
+    Optional<User> findByName(String name);
 }
