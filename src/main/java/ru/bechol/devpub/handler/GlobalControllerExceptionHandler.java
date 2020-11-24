@@ -1,0 +1,135 @@
+package ru.bechol.devpub.handler;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.bechol.devpub.response.ErrorResponse;
+import ru.bechol.devpub.service.Messages;
+import ru.bechol.devpub.service.exception.PostNotFoundException;
+import ru.bechol.devpub.service.exception.PostStatusNotFoundException;
+import ru.bechol.devpub.service.exception.SortModeNotFoundException;
+import ru.bechol.devpub.service.exception.UserNotFoundException;
+
+import javax.management.relation.RoleNotFoundException;
+
+/**
+ * Класс GlobalControllerExceptionHandler.
+ * Обработка исключений, возникающих при выполнении запросов.
+ *
+ * @author Oleg Bech
+ * @email oleg071984@gmail.com
+ */
+@Slf4j
+@RestControllerAdvice
+public class GlobalControllerExceptionHandler {
+
+    @Autowired
+    private Messages messages;
+
+    /**
+     * Метод handleMissingParameter.
+     * Обработка исключения MissingServletRequestParameterException
+     *
+     * @param exception - MissingServletRequestParameterException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException exception) {
+        return this.createErrorResponse("missing-parameter.exception.message",
+                exception.getParameterType(), exception.getParameterName());
+    }
+
+    /**
+     * Метод handlePathVariableException.
+     * Обработка исключения MissingPathVariableException.
+     *
+     * @param exception - MissingPathVariableException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(MissingPathVariableException.class)
+    public ResponseEntity<ErrorResponse> handlePathVariableException(MissingPathVariableException exception) {
+        return this.createErrorResponse("missing-path-variable.exception.message", exception.getVariableName());
+    }
+
+    /**
+     * Метод handleSortModeException.
+     * Обработка исключения SortModeNotFoundException
+     *
+     * @param exception - SortModeNotFoundException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(SortModeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSortModeException(SortModeNotFoundException exception) {
+        return this.createErrorResponse("missing-parameter.exception.message", "", "mode");
+    }
+
+    /**
+     * Метод handlePostStatusException.
+     * Обработка исключения PostStatusNotFoundException
+     *
+     * @param exception - PostStatusNotFoundException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(PostStatusNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePostStatusException(PostStatusNotFoundException exception) {
+        return this.createErrorResponse("missing-parameter.exception.message", "", "post status");
+    }
+
+    /**
+     * Метод handleUsernameNotFoundException.
+     * Обработка исключения UserNotFoundException.
+     *
+     * @param exception - UsernameNotFoundException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UserNotFoundException exception) {
+        return this.createErrorResponse("user-not-found-by.exception.message",
+                exception.getField(), exception.getFieldValue());
+    }
+
+    /**
+     * Метод handleRoleNotFoundException.
+     * Обработка исключения RoleNotFoundException.
+     *
+     * @param exception - RoleNotFoundException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRoleNotFoundException(RoleNotFoundException exception) {
+        return this.createErrorResponse("role-not-found.exception.message", (Object) null);
+    }
+
+    /**
+     * Метод handlePostNotFoundException.
+     * Обработка исключения PostNotFoundException.
+     *
+     * @param exception - PostNotFoundException
+     * @return - ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(PostNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePostNotFoundException(PostNotFoundException exception) {
+        return this.createErrorResponse("post-not-found.exception.message", (Object) null);
+    }
+
+    /**
+     * Метод createErrorResponse.
+     * Запись в лог о возникшем исключении и создание ответа на запрос.
+     *
+     * @param messageId - id формулировки сообщения.
+     * @param params    - набор параметров для сообщения.
+     * @return - ResponseEntity<ErrorResponse>.
+     */
+    private ResponseEntity<ErrorResponse> createErrorResponse(String messageId, Object... params) {
+        String errorMessage = messages.getMessage(messageId, params);
+        log.error(errorMessage);
+        return ResponseEntity.badRequest().body(ErrorResponse.builder().message(errorMessage).build());
+    }
+
+
+}
