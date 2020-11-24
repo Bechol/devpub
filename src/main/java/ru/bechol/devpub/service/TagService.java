@@ -10,12 +10,12 @@ import ru.bechol.devpub.models.Tag;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.TagRepository;
 import ru.bechol.devpub.response.TagResponse;
+import ru.bechol.devpub.service.enums.ModerationStatus;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Класс TagService.
@@ -89,7 +89,7 @@ public class TagService {
      * @return true - если не соблюдены все условия проверки.
      */
     private boolean checkPost(Post post) {
-        return !(post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED) &&
+        return !(post.isActive() && post.getModerationStatus().equals(ModerationStatus.ACCEPTED) &&
                 post.getTime().isBefore(LocalDateTime.now()));
     }
 }

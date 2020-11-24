@@ -12,10 +12,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.bechol.devpub.models.Post;
-import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;
-import ru.bechol.devpub.repository.RoleRepository;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.repository.VoteRepository;
 import ru.bechol.devpub.request.ChangePasswordRequest;
@@ -23,7 +21,10 @@ import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.StatisticResponse;
 import ru.bechol.devpub.response.UserData;
+import ru.bechol.devpub.service.enums.ModerationStatus;
+import ru.bechol.devpub.service.exception.UserNotFoundException;
 
+import javax.management.relation.RoleNotFoundException;
 import java.security.Principal;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -48,13 +49,11 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private RoleRepository roleRepository;
+    private RoleService roleService;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private Messages messages;
-    @Autowired
-    private Map<String, Long> sessionMap;
     @Autowired
     private EmailService emailService;
     @Autowired
@@ -73,7 +72,8 @@ public class UserService implements UserDetailsService {
      * @param registerRequest данные с формы, прошедшие валидацию.
      * @return ResponseEntity<?>.
      */
-    public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult) {
+    public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult)
+            throws RoleNotFoundException {
         if (!captchaCodesService.captchaIsExist(registerRequest.getCaptcha(), registerRequest.getCaptcha_secret())) {
             bindingResult.addError(new FieldError(
                     "captcha", "captcha", messages.getMessage("cp.errors.captcha-code")));
@@ -86,7 +86,7 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
         user.setModerator(false);
-        userRepository.save(setUserRole(user));
+        userRepository.save(this.setUserRole(user));
         return ResponseEntity.ok().body(Response.builder().result(true).build());
     }
 
@@ -97,10 +97,8 @@ public class UserService implements UserDetailsService {
      * @param user - пользователь.
      * @return пользователь с роллью user.
      */
-    private User setUserRole(User user) {
-        List<Role> userRoles = new ArrayList<>();
-        roleRepository.findByName(ROLE_USER).ifPresent(userRoles::add);
-        user.setRoles(userRoles);
+    private User setUserRole(User user) throws RoleNotFoundException {
+        user.setRoles(Collections.singletonList(roleService.findByName(ROLE_USER)));
         return user;
     }
 
@@ -111,8 +109,10 @@ public class UserService implements UserDetailsService {
      * @param email -  email пользователя для поиска.
      * @return Optional<User>.
      */
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(
+                messages.getMessage("user-not-found-by.exception.message", "email", email), "email", email
+        ));
     }
 
     /**
@@ -125,23 +125,20 @@ public class UserService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        messages.getMessage("user.not-found.by-email", email)
-                ));
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
+                messages.getMessage("user.not-found.by-email", email)));
     }
 
     /**
      * Метод checkAuthorization.
-     * Проверка авторизации по сессии.
+     * Проверка авторизации.
      *
      * @param authorizedUser авторизованный пользователь.
      * @return ResponseEntity.
      */
     public ResponseEntity<?> checkAuthorization(User authorizedUser) {
-        ResponseEntity<?> falseResponse = ResponseEntity.ok().body(Response.builder().result(false).build());
         if (authorizedUser == null) {
-            return falseResponse;
+            return ResponseEntity.ok().body(Response.builder().result(false).build());
         }
         return ResponseEntity.ok().body(Response.builder().result(true)
                 .user(UserData.builder()
@@ -149,7 +146,7 @@ public class UserService implements UserDetailsService {
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())
                         .photo(authorizedUser.getPhotoLink())
-                        .moderationCount(postService.findPostsByStatus(Post.ModerationStatus.NEW))
+                        .moderationCount(postService.findPostsByStatus(ModerationStatus.NEW))
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
     }
@@ -228,17 +225,6 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Метод findActiveUser.
-     * Возврат entity для авторизованного пользователя.
-     *
-     * @param principal - авторизованный пользователь.
-     * @return - User
-     */
-    public User findActiveUser(Principal principal) {
-        return userRepository.findByEmail(principal.getName()).orElse(null);
-    }
-
-    /**
      * Метод calculateMyStatistics.
      * Статистика по актвным постам авторизованного пользователя.
      *
@@ -246,17 +232,16 @@ public class UserService implements UserDetailsService {
      * @return StatisticResponse
      */
     public StatisticResponse calculateMyStatistics(Principal principal) {
-        User activeUser = findActiveUser(principal);
-        return this.createStatisticsResponse(activeUser);
+        return this.createStatisticsResponse(this.findByEmail(principal.getName()));
     }
 
     /**
-     * Метод calculateAllPostsStatistics.
+     * Метод calculateSiteStatistics.
      * Статистика по всем постам блога.
      *
      * @return ResponseEntity<?>
      */
-    public ResponseEntity<?> calculateAllPostsStatistics() {
+    public ResponseEntity<?> calculateSiteStatistics() {
         return ResponseEntity.ok(this.createStatisticsResponse(null));
     }
 
@@ -268,7 +253,9 @@ public class UserService implements UserDetailsService {
      * @return StatisticResponse.
      */
     private StatisticResponse createStatisticsResponse(User activeUser) {
-        List<Post> postList = activeUser != null ? postService.findMyActivePosts(activeUser) : postService.findAll();
+        List<Post> postList = activeUser != null ?
+                activeUser.getPosts().stream().filter(Post::isActive).collect(Collectors.toList()) :
+                postService.findAll();
         postList.sort(Comparator.comparing(Post::getTime));
         List<Vote> postsVotes = voteRepository.findByPostIn(postList);
         long postsCount = postList.size();

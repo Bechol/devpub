@@ -5,10 +5,10 @@ import org.springframework.stereotype.Service;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;
-import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.VoteRepository;
 import ru.bechol.devpub.request.PostIdRequest;
 import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.service.exception.PostNotFoundException;
 
 import java.security.Principal;
 
@@ -30,7 +30,7 @@ public class VoteService {
     @Autowired
     private UserService userService;
     @Autowired
-    private PostRepository postRepository;
+    private PostService postService;
 
     /**
      * Метод checkLikeVote.
@@ -55,13 +55,10 @@ public class VoteService {
      * @param value         - 1:like, -1:dislike
      * @return Response.
      */
-    public Response vote(PostIdRequest postIdRequest, Principal principal, int value) {
-        User activeUser = userService.findByEmail(principal.getName()).orElse(null);
-        if (activeUser == null) {
-            return Response.builder().result(false).build();
-        }
-        Post post = postRepository.findById(postIdRequest.getPostId()).orElse(null);
-        if (post == null || this.isPostVoted(post, activeUser, value)) {
+    public Response vote(PostIdRequest postIdRequest, Principal principal, int value) throws PostNotFoundException {
+        User activeUser = userService.findByEmail(principal.getName());
+        Post post = postService.findById(postIdRequest.getPostId());
+        if (this.isPostVoted(post, activeUser, value)) {
             return Response.builder().result(false).build();
         }
         Vote vote = new Vote();

@@ -56,8 +56,8 @@ public class GlobalSettingsService {
      * @return - 400 - если активный пользователь не существует или не модератор. 200 - после сохранение настроек.
      */
     public ResponseEntity updateGeneralSettings(Map<String, Boolean> generalSettingsMap, Principal principal) {
-        User activeUser = userService.findByEmail(principal.getName()).orElse(null);
-        if (activeUser == null || !activeUser.isModerator()) {
+        User activeUser = userService.findByEmail(principal.getName());
+        if (!activeUser.isModerator()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.builder().message(
                     messages.getMessage("er.not.moderator")).build());
         }

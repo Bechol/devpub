@@ -50,10 +50,7 @@ public class ProfileService {
      */
     public Response<?> editProfileWithoutPhoto(Map<String, String> editParametersMap, Principal principal) {
         Map<String, String> errorsMap = new HashMap<>();
-        User user = userService.findActiveUser(principal);
-        if (user == null) {
-            return Response.builder().result(false).build();
-        }
+        User user = userService.findByEmail(principal.getName());
         handleEditParameters(editParametersMap, user, errorsMap);
         if (errorsMap.size() > 0) {
             return Response.builder().result(false).errors(errorsMap).build();
@@ -62,13 +59,17 @@ public class ProfileService {
         return Response.builder().result(true).build();
     }
 
+    /**
+     *
+     * @param editProfileRequest
+     * @param file
+     * @param principal
+     * @return
+     */
     public Response<?> editProfileWithPhoto(EditProfileRequest editProfileRequest, MultipartFile file,
                                             Principal principal) {
         Map<String, String> errorsMap = new HashMap<>();
-        User user = userService.findActiveUser(principal);
-        if (user == null) {
-            return Response.builder().result(false).build();
-        }
+        User user = userService.findByEmail(principal.getName());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> editProfileParametersMap = objectMapper.convertValue(editProfileRequest, Map.class);
         handleEditParameters(editProfileParametersMap, user, errorsMap);

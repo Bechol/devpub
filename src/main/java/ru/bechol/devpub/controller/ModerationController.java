@@ -9,6 +9,7 @@ import ru.bechol.devpub.request.ModerationRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.PostService;
 import ru.bechol.devpub.service.UserService;
+import ru.bechol.devpub.service.exception.PostNotFoundException;
 
 import java.security.Principal;
 
@@ -38,7 +39,8 @@ public class ModerationController {
      * @return - Response.
      */
     @PostMapping
-    public Response moderatePost(@RequestBody ModerationRequest moderationRequest, Principal principal) {
+    public Response moderatePost(@RequestBody ModerationRequest moderationRequest, Principal principal)
+            throws PostNotFoundException {
         return postService.moderatePost(moderationRequest, principal);
     }
 }

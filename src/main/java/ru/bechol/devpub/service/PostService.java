@@ -354,15 +354,10 @@ public class PostService {
      * @param principal         - авторизованный пользователь.
      * @return Response.
      */
-    public Response moderatePost(ModerationRequest moderationRequest, Principal principal) {
-        User activeUser = userService.findActiveUser(principal);
-        if (activeUser == null || !activeUser.isModerator()) {
-            return Response.builder().result(false).build();
-        }
-        Post post = postRepository.findById(moderationRequest.getPostId()).orElse(null);
-        if (post == null) {
-            return Response.builder().result(false).build();
-        }
+    public Response moderatePost(ModerationRequest moderationRequest, Principal principal)
+            throws PostNotFoundException {
+        User activeUser = userService.findByEmail(principal.getName());
+        Post post = this.findById(moderationRequest.getPostId());
         if (moderationRequest.getDecision().equals("accept")) {
             post.setModerationStatus(ModerationStatus.ACCEPTED);
         } else {

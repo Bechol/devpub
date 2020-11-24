@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.bechol.devpub.request.CommentRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.CommentService;
+import ru.bechol.devpub.service.exception.PostNotFoundException;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -46,7 +47,7 @@ public class CommentController {
      */
     @PostMapping
     public ResponseEntity<?> commentPost(@Valid @RequestBody CommentRequest commentRequest, BindingResult bindingResult,
-                                         Principal principal) {
+                                         Principal principal) throws PostNotFoundException {
         if (bindingResult.hasErrors()) {
             Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
                     .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));

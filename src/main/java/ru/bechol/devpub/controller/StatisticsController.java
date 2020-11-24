@@ -27,7 +27,8 @@ public class StatisticsController {
     /**
      * Метод calculateMyStatistics.
      * GET запрос /api/statistics/my
-     * Вывод статистики по активным постам авторизованного пользователя.
+     * Метод возвращает статистику постов текущего авторизованного пользователя: общие количества параметров
+     * для всех публикаций, у который он является автором и доступные для чтения.
      *
      * @param principal - авторизованный пользователь.
      * @return StatisticResponse.
@@ -46,6 +47,6 @@ public class StatisticsController {
      */
     @GetMapping("/all")
     public ResponseEntity<?> calculateSiteStatistics() {
-        return userService.calculateAllPostsStatistics();
+        return userService.calculateSiteStatistics();
     }
 }

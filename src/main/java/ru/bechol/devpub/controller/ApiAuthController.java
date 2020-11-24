@@ -14,6 +14,7 @@ import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.CaptchaCodesService;
 import ru.bechol.devpub.service.UserService;
 
+import javax.management.relation.RoleNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
@@ -37,8 +38,6 @@ public class ApiAuthController {
     private CaptchaCodesService captchaCodesService;
     @Autowired
     private UserService userService;
-    @Autowired
-    private Map<String, Long> sessionMap;
 
     /**
      * Метод getCaptcha.
@@ -65,7 +64,7 @@ public class ApiAuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest,
-                                      BindingResult bindingResult) {
+                                      BindingResult bindingResult) throws RoleNotFoundException {
         return userService.registrateNewUser(registerRequest, bindingResult);
     }
 
