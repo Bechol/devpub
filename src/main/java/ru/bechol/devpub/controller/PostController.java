@@ -13,7 +13,15 @@ import ru.bechol.devpub.response.PostResponse;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.PostService;
 import ru.bechol.devpub.service.VoteService;
+import ru.bechol.devpub.service.enums.ModerationStatus;
+import ru.bechol.devpub.service.enums.PostStatus;
+import ru.bechol.devpub.service.enums.SortMode;
+import ru.bechol.devpub.service.exception.ModerationStatusNotFoundException;
+import ru.bechol.devpub.service.exception.PostNotFoundException;
+import ru.bechol.devpub.service.exception.PostStatusNotFoundException;
+import ru.bechol.devpub.service.exception.SortModeNotFoundException;
 
+import javax.management.relation.RoleNotFoundException;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.Map;
@@ -36,7 +44,7 @@ public class PostController {
     private VoteService voteService;
 
     /**
-     * Метод allSorted.
+     * Метод getAllPostsSorted.
      * GET запрос /api/post.
      * Метод получения постов со всей сопутствующей информацией для главной страницы и подразделов "Новые",
      * "Самые обсуждаемые", "Лучшие" и "Старые". Метод выводит посты, отсортированные в соответствии с параметром mode.
@@ -47,13 +55,14 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponse allSorted(@RequestParam int offset, @RequestParam int limit, @RequestParam String mode) {
-        return postService.findAllSorted(offset, limit, mode);
+    public ResponseEntity<PostResponse> getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
+                                                          @RequestParam(defaultValue = "20") int limit,
+                                                          @RequestParam String mode) throws SortModeNotFoundException {
+        return postService.findAllPostsSorted(offset, limit, SortMode.fromValue(mode));
     }
 
     /**
-     * Метод searchByQuery.
+     * Метод findPostsByTextContainingQuery.
      * GET запрос /api/post/search.
      * Метод возвращает посты, соответствующие поисковому запросу - строке query.
      * В случае, если запрос пустой, метод должен выводить все посты.
@@ -64,14 +73,14 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/search")
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponse searchByQuery(@RequestParam int offset, @RequestParam int limit,
-                                      @RequestParam String query) {
-        return postService.findByQuery(offset, limit, query);
+    public ResponseEntity<PostResponse> findPostsByTextContainingQuery(@RequestParam(defaultValue = "0") int offset,
+                                                                       @RequestParam(defaultValue = "20") int limit,
+                                                                       @RequestParam String query) {
+        return postService.findPostsByTextContainingQuery(offset, limit, query);
     }
 
     /**
-     * Метод searchByDate.
+     * Метод searchPostsByDate.
      * GET запрос /api/post/byDate.
      * Выводит посты за указанную дату, переданную в запросе в параметре date.
      *
@@ -81,10 +90,10 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/byDate")
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponse searchByDate(@RequestParam int offset, @RequestParam int limit,
-                                     @RequestParam String date) {
-        return postService.findByDate(offset, limit, date);
+    public ResponseEntity<PostResponse> findPostsByDate(@RequestParam(defaultValue = "0") int offset,
+                                                        @RequestParam(defaultValue = "20") int limit,
+                                                        @RequestParam String date) {
+        return postService.findPostsByDate(offset, limit, date);
     }
 
     /**
@@ -98,9 +107,9 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @GetMapping("/byTag")
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponse searchByTag(@RequestParam int offset, @RequestParam int limit,
-                                    @RequestParam String tag) {
+    public ResponseEntity<PostResponse> findByTag(@RequestParam(defaultValue = "0") int offset,
+                                                  @RequestParam(defaultValue = "20") int limit,
+                                                  @RequestParam String tag) {
         return postService.findByTag(offset, limit, tag);
     }
 
@@ -117,9 +126,9 @@ public class PostController {
      */
     @GetMapping("/my")
     @ResponseStatus(HttpStatus.OK)
-    public PostResponse findMyPosts(Principal user, @RequestParam int offset,
-                                    @RequestParam int limit, @RequestParam String status) {
-        return postService.findMyPosts(user, offset, limit, status);
+    public PostResponse findActiveUserPosts(Principal user, @RequestParam int offset, @RequestParam int limit,
+                                            @RequestParam String status) throws PostStatusNotFoundException {
+        return postService.findActiveUserPosts(user, offset, limit, PostStatus.fromValue(status));
     }
 
     /**
@@ -135,7 +144,8 @@ public class PostController {
      */
     @PostMapping
     public ResponseEntity<Response<?>> createNewPost(@Valid @RequestBody PostRequest postRequest,
-                                                     BindingResult bindingResult, Principal principal) {
+                                                     BindingResult bindingResult, Principal principal)
+            throws RoleNotFoundException {
         return postService.createNewPost(principal, postRequest, bindingResult);
     }
 
@@ -152,7 +162,8 @@ public class PostController {
      * @return ResponseEntity<Response>.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<PostDto> showPost(@PathVariable(name = "id") long postId, Principal principal) {
+    public ResponseEntity<PostDto> showPost(@PathVariable(name = "id") long postId, Principal principal)
+            throws PostNotFoundException {
         return postService.showPost(postId, principal);
     }
 
@@ -160,15 +171,16 @@ public class PostController {
      * Метод editPost.
      * PUT запрос /api/post/{id}.
      * Метод изменяет данные поста с идентификатором ID на те, которые пользователь ввёл в форму публикации.
+     *
      * @param editPostRequest - тело запроса.
-     * @param bindingResult - результаты валидации данных пользовательской формы.
-     * @param postId    - id поста.
-     * @param principal - авторизованный пользователь.
+     * @param bindingResult   - результаты валидации данных пользовательской формы.
+     * @param postId          - id поста.
+     * @param principal       - авторизованный пользователь.
      * @return ResponseEntity<Response>.
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
-                                      @PathVariable("id") long postId, Principal principal) {
+                                      @PathVariable("id") long postId, Principal principal) throws PostNotFoundException {
         if (bindingResult.hasErrors()) {
             Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
                     .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
@@ -179,7 +191,9 @@ public class PostController {
 
 
     /**
-     * Метод postsOnModerationэ
+     * Метод postsOnModeration
+     * Метод фиксирует действие модератора по посту: его утверждение или отклонение.
+     * Кроме того, фиксируется moderator_id - идентификатор пользователя, который отмодерировал пост.
      * GET запрос /api/post/moderation
      *
      * @param offset    - сдвиг от 0 для постраничного вывода.
@@ -190,8 +204,9 @@ public class PostController {
      */
     @GetMapping("/moderation")
     public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
-                                          @RequestParam String status, Principal principal) {
-        return postService.findPostsOnModeration(principal, offset, limit, status);
+                                          @RequestParam String status, Principal principal)
+            throws ModerationStatusNotFoundException {
+        return postService.findPostsOnModeration(principal, offset, limit, ModerationStatus.fromValue(status));
     }
 
     /**
@@ -207,7 +222,8 @@ public class PostController {
      */
     @PostMapping("/like")
     @ResponseStatus(HttpStatus.OK)
-    public Response<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal) {
+    public Response<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
+            throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, 1);
     }
 
@@ -225,7 +241,8 @@ public class PostController {
      */
     @PostMapping("/dislike")
     @ResponseStatus(HttpStatus.OK)
-    public Response<?> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal) {
+    public Response<?> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
+            throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, -1);
     }
 }

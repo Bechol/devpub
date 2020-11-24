@@ -4,25 +4,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.Role;
-import ru.bechol.devpub.models.Tag;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.PostRepository;
-import ru.bechol.devpub.repository.RoleRepository;
-import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.ModerationRequest;
 import ru.bechol.devpub.request.PostRequest;
-import ru.bechol.devpub.response.*;
+import ru.bechol.devpub.response.CalendarResponse;
+import ru.bechol.devpub.response.PostDto;
+import ru.bechol.devpub.response.PostResponse;
+import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.service.enums.ModerationStatus;
+import ru.bechol.devpub.service.enums.PostStatus;
+import ru.bechol.devpub.service.enums.SortMode;
+import ru.bechol.devpub.service.exception.PostNotFoundException;
+import ru.bechol.devpub.service.helper.PostMapperHelper;
 
+import javax.management.relation.RoleNotFoundException;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -44,64 +47,24 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class PostService { //todo рефакторинг
+public class PostService {
 
     private static final String ROLE_MODERATOR = "ROLE_MODERATOR";
     @Value("${time-offset}")
     private String clientZoneOffsetId;
-    @Value("${announce.string.length}")
-    private int announceStringLength;
-    @Value("${announce.string.end}")
-    private String announceStringEnd;
     @Autowired
     private PostRepository postRepository;
     @Autowired
-    private Messages messages;
+    private UserService userService;
     @Autowired
-    private UserRepository userRepository;
+    private RoleService roleService;
     @Autowired
     private TagService tagService;
     @Autowired
-    private UserService userService;
+    private Messages messages;
     @Autowired
-    private RoleRepository roleRepository;
+    private PostMapperHelper postMapperHelper;
 
-    /**
-     * Метод createNewPost.
-     * Создание поста.
-     *
-     * @param principal     - авторизованный пользователь.
-     * @param postRequest   - данные нового поста.
-     * @param bindingResult - результаты валидации данных нового поста.
-     * @return - ResponseEntity<Response<?>>.
-     */
-    public ResponseEntity<Response<?>> createNewPost(Principal principal, PostRequest postRequest,
-                                                     BindingResult bindingResult) {
-        User activeUser = userService.findByEmail(principal.getName()).orElse(null);
-        if (activeUser == null) {
-            bindingResult.addError(new FieldError(
-                    "user", "user", messages.getMessage("user.not-found.by-email")));
-        }
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
-                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
-        }
-        Role role = roleRepository.findByName("ROLE_MODERATOR").orElse(null);
-        Post newPost = new Post();
-        newPost.setTime(this.preparePostCreationTime(postRequest.getTimestamp()));
-        newPost.setActive(postRequest.isActive());
-        newPost.setTitle(postRequest.getTitle());
-        newPost.setText(postRequest.getText());
-        newPost.setModerationStatus(Post.ModerationStatus.NEW);
-        newPost.setUser(activeUser);
-        newPost.setModerator(role.getUsers().stream().findFirst().orElse(null));
-        if (postRequest.getTags().size() > 0) {
-            newPost.setTags(tagService.mapTags(postRequest.getTags()));
-        }
-        postRepository.save(newPost);
-        return ResponseEntity.ok(Response.builder().result(true).build());
-    }
 
     /**
      * Метод preparePostCreationTime
@@ -118,39 +81,38 @@ public class PostService { //todo рефакторинг
     }
 
     /**
-     * Метод findAllSorted
+     * Метод findAllPostsSorted
      * Метод находити сортирует все посты, в соответствии с заданым режимом mode.
      *
-     * @param offset - сдвиг от 0 для постраничного вывода.
-     * @param limit  - количество постов, которое надо вывести.
-     * @param mode   -  режим вывода (сортировка).
+     * @param offset   - сдвиг от 0 для постраничного вывода.
+     * @param limit    - количество постов, которое надо вывести.
+     * @param sortMode -  режим вывода (сортировка).
      * @return - ResponseEntity<PostsResponse>.
      */
-    public PostResponse findAllSorted(int offset, int limit, String mode) {
+    public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
-        List<Post> postListFromQuery = postRepository.findAllPostsUnsorted(pageable).getContent();
-        List<PostDto> postDtoList = mapPostList(postListFromQuery, true, false, false);
-        switch (mode) {
-            case "recent":
-                postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp).reversed());
-                break;
-            case "popular":
+        Page<Post> postPages = postRepository.findByModerationStatusAndActiveTrueAndTimeBefore(
+                ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+        List<PostDto> postDtoList = postMapperHelper.mapPostList(postPages.getContent(),
+                true, false, false);
+        switch (sortMode) {
+            case POPULAR:
                 postDtoList.sort(Comparator.comparingLong(PostDto::getCommentCount).reversed());
                 break;
-            case "best":
+            case BEST:
                 postDtoList.sort(Comparator.comparingLong(PostDto::getLikeCount).reversed());
                 break;
-            case "early":
+            case EARLY:
                 postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp));
                 break;
             default:
-                log.info(messages.getMessage("post.sort-mode.not-defined", mode));
+                postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp).reversed());
         }
-        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
+        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
     }
 
     /**
-     * Метод findByQuery.
+     * Метод findPostsByTextContainingQuery.
      * Метод находит все посты, текст которых содержит строку query.
      *
      * @param offset - сдвиг от 0 для постраничного вывода.
@@ -158,92 +120,19 @@ public class PostService { //todo рефакторинг
      * @param query  - поисковый запрос.
      * @return ResponseEntity<PostsResponse>
      */
-    public PostResponse findByQuery(int offset, int limit, String query) {
+    public ResponseEntity<PostResponse> findPostsByTextContainingQuery(int offset, int limit, String query) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
-        Page<Post> postListFromQuery = postRepository.findAllPostsByQuery(pageable, query);
-        List<PostDto> postDtoList = mapPostList(postListFromQuery.getContent(), true, false, false);
-        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
+        Page<Post> postPages = postRepository
+                .findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
+                        ModerationStatus.ACCEPTED, LocalDateTime.now(), query, pageable);
+        List<PostDto> postDtoList = postMapperHelper.mapPostList(
+                postPages.getContent(), true, false, false
+        );
+        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
     }
 
     /**
-     * Метод mapPostList.
-     * Формирование коллекции PostDto для ответа сервера.
-     *
-     * @param postsByQueryList - коллекция постов
-     * @param includeAnnounce  - флаг для включения в ответ краткого содержания поста.
-     * @param includeComments  - флаг для включения в ответ сервера комментариев поста.
-     * @param includeTags      - флаг для включения в ответ сервера тегов.
-     * @return - List<PostDto>
-     */
-    private List<PostDto> mapPostList(List<Post> postsByQueryList, boolean includeAnnounce,
-                                      boolean includeComments, boolean includeTags) {
-        return postsByQueryList.stream().map(post -> mapPost(post, includeAnnounce, includeComments, includeTags))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Метод mapPost.
-     * Создание объекта PostDto.
-     *
-     * @param post            - пост.
-     * @param includeAnnounce - флаг для включения в ответ краткого содержания поста.
-     * @param includeComments - флаг для включения в ответ сервера комментариев поста.
-     * @param includeTags     - флаг для включения в ответ сервера тегов.
-     * @return - PostDto
-     */
-    private PostDto mapPost(Post post, boolean includeAnnounce, boolean includeComments, boolean includeTags) {
-        return PostDto.builder()
-                .id(post.getId())
-                .active(post.isActive())
-                .timestamp(post.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
-                .user(UserDto.builder().id(post.getUser().getId()).name(post.getUser().getName()).build())
-                .title(post.getTitle())
-                .text(post.getText())
-                .announce(includeAnnounce ? post.getText().substring(0, announceStringLength)
-                        .concat(announceStringEnd) : null)
-                .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
-                .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
-                .commentCount(post.getComments().size())
-                .viewCount(post.getViewCount())
-                .comments(includeComments ? mapPostCommentList(post) : null)
-                .tags(includeTags ? mapPostTags(post) : null)
-                .build();
-    }
-
-    /**
-     * Метод mapPostCommentList.
-     * Фформирование списка комментариев к посту.
-     *
-     * @param post - пост.
-     * @return List<CommentDto>.
-     */
-    private List<CommentDto> mapPostCommentList(Post post) {
-        return post.getComments().stream().map(comment -> CommentDto.builder()
-                .id(comment.getId())
-                .timestamp(comment.getTime().toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond())
-                .text(comment.getText())
-                .user(UserDto.builder().
-                        id(post.getUser().getId())
-                        .name(post.getUser().getName())
-                        .photo(post.getUser().getPhotoLink())
-                        .build())
-                .build())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Метод mapPostTags.
-     * Преобразование имен тегов поста в список.
-     *
-     * @param post - пост.
-     * @return List<String>.
-     */
-    private List<String> mapPostTags(Post post) {
-        return post.getTags().stream().map(Tag::getName).collect(Collectors.toList());
-    }
-
-    /**
-     * Метод findByDate.
+     * Метод findPostsByDate.
      * Выводит посты за указанную дату, переданную в запросе в параметре date.
      *
      * @param offset - сдвиг от 0 для постраничного вывода
@@ -251,11 +140,13 @@ public class PostService { //todo рефакторинг
      * @param date   - дата, за которую необходимо отобрать посты.
      * @return - фResponseEntity<PostsResponse>.
      */
-    public PostResponse findByDate(int offset, int limit, String date) {
+    public ResponseEntity<PostResponse> findPostsByDate(int offset, int limit, String date) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
-        List<Post> postListFromQuery = postRepository.findAllPostsByDate(pageable, date).getContent();
-        List<PostDto> postDtoList = mapPostList(postListFromQuery, true, false, false);
-        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
+        Page<Post> postPages = postRepository.findByDate(pageable, date);
+        List<PostDto> postDtoList = postMapperHelper.mapPostList(
+                postPages.getContent(), true, false, false
+        );
+        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
     }
 
     /**
@@ -267,52 +158,91 @@ public class PostService { //todo рефакторинг
      * @param tag    - тег, к которому привязаны посты.
      * @return - ResponseEntity<PostsResponse>.
      */
-    public PostResponse findByTag(int offset, int limit, String tag) {
+    public ResponseEntity<PostResponse> findByTag(int offset, int limit, String tag) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
-        List<Post> postListFromQuery = postRepository.findAllByTag(pageable, tag).getContent();
-        List<PostDto> postDtoList = mapPostList(postListFromQuery, true, false, false);
-        return PostResponse.builder().count(postDtoList.size()).posts(postDtoList).build();
+        Page<Post> postPages = postRepository.findByTag(pageable, tag);
+        List<PostDto> postDtoList = postMapperHelper.mapPostList(
+                postPages.getContent(), true, false, false
+        );
+        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
     }
 
     /**
-     * Метод findMyPosts.
-     * Метод формирует ответ GET запрос /api/post/my.
+     * Метод findActiveUserPosts.
+     * Метод формирует ответ на GET запрос /api/post/my.
      *
-     * @param offset - сдвиг от 0 для постраничного вывода
-     * @param limit  - количество постов, которое надо вывести
-     * @param status - статус модерации.
+     * @param offset     - сдвиг от 0 для постраничного вывода
+     * @param limit      - количество постов, которое надо вывести
+     * @param postStatus - статус модерации.
      * @return - ResponseEntity<PostsResponse>.
      */
-
-    public PostResponse findMyPosts(Principal principal, int offset, int limit, String status) {
-        Pageable pageable = PageRequest.of(offset / limit, limit);
-        User user = userRepository.findByEmail(principal.getName()).orElse(null);
-        List<Post> postList = user.getPosts();
-        switch (status) {
-            case "inactive":
-                postList = postList.stream().filter(post -> !post.isActive()).collect(Collectors.toList());
+    public PostResponse findActiveUserPosts(Principal principal, int offset, int limit, PostStatus postStatus) {
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");
+        List<Post> myPostList = userService.findByEmail(principal.getName()).getPosts();
+        switch (postStatus) {
+            case PENDING:
+                myPostList = this.filterActivePostByModerationStatus(myPostList, ModerationStatus.NEW);
                 break;
-            case "pending":
-                postList = postList.stream().filter(post ->
-                        post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.NEW))
-                        .collect(Collectors.toList());
+            case DECLINED:
+                myPostList = this.filterActivePostByModerationStatus(myPostList, ModerationStatus.DECLINED);
                 break;
-            case "declined":
-                postList = postList.stream().filter(post ->
-                        post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.DECLINED))
-                        .collect(Collectors.toList());
-                break;
-            case "published":
-                postList = postList.stream().filter(post ->
-                        post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED))
-                        .collect(Collectors.toList());
+            case PUBLISHED:
+                myPostList = this.filterActivePostByModerationStatus(myPostList, ModerationStatus.ACCEPTED);
                 break;
             default:
-                log.info("User don't have posts");
+                myPostList = myPostList.stream().filter(post -> !post.isActive()).collect(Collectors.toList());
         }
-        List<PostDto> resultList = mapPostList(postList, true, false, false);
+        List<PostDto> resultList = postMapperHelper.mapPostList(
+                myPostList, true, false, false
+        );
         Page<PostDto> postPages = new PageImpl<>(resultList, pageable, resultList.size());
         return PostResponse.builder().count(resultList.size()).posts(postPages.getContent()).build();
+    }
+
+    /**
+     * Метод filterActivePostByModerationStatus.
+     * Выборка активных постов по статусу модерации.
+     *
+     * @param postList         - лист постов, из которого выбираем.
+     * @param moderationStatus - статус модерации.
+     * @return - отфильтрованный список постов.
+     */
+    private List<Post> filterActivePostByModerationStatus(List<Post> postList, ModerationStatus moderationStatus) {
+        return postList.stream().filter(post ->
+                post.isActive() && post.getModerationStatus().equals(moderationStatus)).collect(Collectors.toList()
+        );
+    }
+
+    /**
+     * Метод createNewPost.
+     * Создание поста.
+     *
+     * @param principal     - авторизованный пользователь.
+     * @param postRequest   - данные нового поста.
+     * @param bindingResult - результаты валидации данных нового поста.
+     * @return - ResponseEntity<Response<?>>.
+     */
+    public ResponseEntity<Response<?>> createNewPost(Principal principal, PostRequest postRequest,
+                                                     BindingResult bindingResult) throws RoleNotFoundException {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
+                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
+        }
+        Role roleModerator = roleService.findByName("ROLE_MODERATOR");
+        Post newPost = new Post();
+        newPost.setTime(this.preparePostCreationTime(postRequest.getTimestamp()));
+        newPost.setActive(postRequest.isActive());
+        newPost.setTitle(postRequest.getTitle());
+        newPost.setText(postRequest.getText());
+        newPost.setModerationStatus(ModerationStatus.NEW);
+        newPost.setUser(userService.findByEmail(principal.getName()));
+        newPost.setModerator(roleModerator.getUsers().stream().findFirst().orElse(null));
+        if (postRequest.getTags().size() > 0) {
+            newPost.setTags(tagService.mapTags(postRequest.getTags()));
+        }
+        postRepository.save(newPost);
+        return ResponseEntity.ok(Response.builder().result(true).build());
     }
 
     /**
@@ -323,25 +253,26 @@ public class PostService { //todo рефакторинг
      * @param principal - авторизованный пользователь.
      * @return ResponseEntity<PostDto>
      */
-    public ResponseEntity<PostDto> showPost(long postId, Principal principal) {
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<PostDto> showPost(long postId, Principal principal) throws PostNotFoundException {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
+                messages.getMessage("post-not-found.exception.message")));
         User activeUser = null;
         if (principal != null) {
-            activeUser = userRepository.findByEmail(principal.getName()).orElse(null);
+            activeUser = userService.findByEmail(principal.getName());
         } else {
             post = increaseViewCount(post);
-            return ResponseEntity.ok().body(mapPost(post, false, true, true));
+            return ResponseEntity.ok().body(postMapperHelper.mapPost(post,
+                    false, true, true));
         }
         boolean isModerator = activeUser.getRoles().stream().anyMatch(role -> role.getName().equals(ROLE_MODERATOR));
         boolean isAuthor = post.getUser().getId() == activeUser.getId();
         if (isAuthor || isModerator) {
-            return ResponseEntity.ok(mapPost(post, false, true, true));
+            return ResponseEntity.ok(postMapperHelper.mapPost(
+                    post, false, true, true));
         }
         post = increaseViewCount(post);
-        return ResponseEntity.ok(mapPost(post, false, true, true));
+        return ResponseEntity.ok(postMapperHelper.mapPost(
+                post, false, true, true));
     }
 
     /**
@@ -360,40 +291,33 @@ public class PostService { //todo рефакторинг
      * Метод findPostsOnModeration.
      * Формирование ответа для запроса GET /api/post/moderation
      *
-     * @param principal - авторизованный пользователь.
-     * @param offset    - сдвиг от 0 для постраничного вывода
-     * @param limit     - количество постов, которое надо вывести
-     * @param status    - статус модерации.
+     * @param principal        - авторизованный пользователь.
+     * @param offset           - сдвиг от 0 для постраничного вывода
+     * @param limit            - количество постов, которое надо вывести
+     * @param moderationStatus - статус модерации.
      * @return PostResponse.
      */
-    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit, String status) {
-        Pageable pageable = PageRequest.of(offset / limit, limit);
-        User moderator = userService.findByEmail(principal.getName()).orElse(null);
-        if (moderator == null) {
-            return PostResponse.builder().count(0).posts(new ArrayList<>()).build();
-        }
-        List<PostDto> resultList = new ArrayList<>();
-        switch (status) {
-            case "new": //все активные посты со статусом "НОВЫЙ"
-                resultList = mapPostList(postRepository.findByModerationStatusAndActiveTrue(Post.ModerationStatus.NEW),
-                        true, false, false);
+    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit,
+                                              ModerationStatus moderationStatus) {
+        User moderator = userService.findByEmail(principal.getName());
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");
+        Page<Post> queryListResult;
+        switch (moderationStatus) {
+            case ACCEPTED:
+                queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
+                        ModerationStatus.ACCEPTED, pageable);
                 break;
-            case "accepted": //все активные, утвержденные мной посты
-                resultList = mapPostList(postRepository
-                                .findByModeratedByAndModerationStatusAndActiveTrue(moderator,
-                                        Post.ModerationStatus.ACCEPTED),
-                        true, false, false);
-                break;
-            case "declined": //все активные, отклоненные мной посты
-                resultList = mapPostList(postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
-                        Post.ModerationStatus.DECLINED),
-                        true, false, false);
+            case DECLINED:
+                queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
+                        ModerationStatus.DECLINED, pageable);
                 break;
             default:
-                log.info(messages.getMessage("post.sort-mode.not-defined"));
+                queryListResult = postRepository.
+                        findByModerationStatusAndActiveTrue(ModerationStatus.NEW, pageable);
         }
-        Page<PostDto> postPages = new PageImpl<>(resultList, pageable, resultList.size());
-        return PostResponse.builder().count(resultList.size()).posts(postPages.getContent()).build();
+        List<PostDto> resultList = postMapperHelper.mapPostList(queryListResult.getContent(),
+                true, false, false);
+        return PostResponse.builder().count(queryListResult.getTotalElements()).posts(resultList).build();
     }
 
     /**
@@ -405,19 +329,18 @@ public class PostService { //todo рефакторинг
      * @param principal       - авторизованный пользователь.
      * @return - ResponseEntity<?>.
      */
-    public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal) {
-        User activeUser = userService.findActiveUser(principal);
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null || activeUser == null) {
-            return ResponseEntity.ok(Response.builder().result(false).build());
-        }
+    public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal)
+            throws PostNotFoundException {
+        User activeUser = userService.findByEmail(principal.getName());
+        Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
+                messages.getMessage("post-not-found.exception.message")));
         post.setActive(editPostRequest.isActive());
         post.setTitle(editPostRequest.getTitle());
         post.setText(editPostRequest.getText());
         post.setTime(this.preparePostCreationTime(editPostRequest.getTimestamp()));
         post.setTags(tagService.mapTags(editPostRequest.getTags()));
         if (!activeUser.isModerator()) {
-            post.setModerationStatus(Post.ModerationStatus.NEW);
+            post.setModerationStatus(ModerationStatus.NEW);
         }
         postRepository.save(post);
         return ResponseEntity.ok(Response.builder().result(true).build());
@@ -441,21 +364,33 @@ public class PostService { //todo рефакторинг
             return Response.builder().result(false).build();
         }
         if (moderationRequest.getDecision().equals("accept")) {
-            post.setModerationStatus(Post.ModerationStatus.ACCEPTED);
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
         } else {
-            post.setModerationStatus(Post.ModerationStatus.DECLINED);
+            post.setModerationStatus(ModerationStatus.DECLINED);
         }
         post.setModeratedBy(activeUser);
         postRepository.save(post);
         return Response.builder().result(true).build();
     }
 
-
+    /**
+     * Метод findMyActivePosts.
+     * Поиск активных постов пользователя.
+     *
+     * @param user - пользователь.
+     * @return
+     */
     public List<Post> findMyActivePosts(User user) {
         List<Post> result = postRepository.findByUserAndActiveTrue(user);
         return result != null && !result.isEmpty() ? result : new ArrayList<>();
     }
 
+    /**
+     * Метод findAll.
+     * Поиск/вывод всех постов.
+     *
+     * @return - коллекция, найденных постов.
+     */
     public List<Post> findAll() {
         List<Post> result = new ArrayList<>();
         postRepository.findAll().forEach(result::add);
@@ -467,6 +402,7 @@ public class PostService { //todo рефакторинг
      * Метод выводит количества публикаций на каждую дату переданного в параметре year года или текущего года,
      * если параметр year не задан. В параметре years всегда возвращается список всех годов, з
      * а которые была хотя бы одна публикация, в порядке возврастания.
+     *
      * @param year - год.
      * @return CalendarResponse.
      */
@@ -478,8 +414,29 @@ public class PostService { //todo рефакторинг
         return CalendarResponse.builder().years(years).posts(resultMap).build();
     }
 
-    public long findPostsByStatus(Post.ModerationStatus moderationStatus) {
-        List<Post> newPosts = postRepository.findByModerationStatusAndActiveTrue(moderationStatus);
+    /**
+     * Метод findPostsByStatus.
+     * Вывод количества постов по статусу.
+     *
+     * @param moderationStatus - статус модерации.
+     * @return -
+     */
+    public long findPostsByStatus(ModerationStatus moderationStatus) {
+        List<Post> newPosts = postRepository
+                .findByModerationStatusAndActiveTrue(moderationStatus, null).getContent();
         return !newPosts.isEmpty() ? newPosts.size() : 0;
+    }
+
+    /**
+     * Метод findById.
+     * Поиск поста по id.
+     *
+     * @param postId - id искомого поста.
+     * @return - найденный пост.
+     * @throws PostNotFoundException - исключение, если пост не найден.
+     */
+    public Post findById(long postId) throws PostNotFoundException {
+        return postRepository.findById(postId).
+                orElseThrow(() -> new PostNotFoundException(messages.getMessage("post-not-found.exception.message")));
     }
 }

@@ -8,8 +8,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
+import ru.bechol.devpub.service.enums.ModerationStatus;
 
 import javax.persistence.Tuple;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -21,35 +23,39 @@ import java.util.List;
  */
 @Repository
 public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
+
     /**
-     * Метод findAllPostsUnsorted.
+     * Метод findByModerationStatusAndActiveTrueAndTimeBefore.
      * Вывод только активных (поле is_active в таблице posts равно 1),
      * утверждённых модератором (поле moderation_status равно ACCEPTED) постов с датой публикации
      * не позднее текущего момента.
      *
-     * @param pageable
+     * @param moderationStatus - статус модерации
+     * @param time - время, ранее которого посты были созданы
+     * @param pageable - настройки пагинации
      * @return Page<Post>.
+     * @see ru.bechol.devpub.service.PostService
      */
-    @Query("SELECT p FROM Post p WHERE " +
-            "p.active = true AND p.moderationStatus = 'ACCEPTED' AND p.time <= CURRENT_TIMESTAMP")
-    Page<Post> findAllPostsUnsorted(Pageable pageable);
+    Page<Post> findByModerationStatusAndActiveTrueAndTimeBefore(ModerationStatus moderationStatus,
+                                                                LocalDateTime time, Pageable pageable);
 
     /**
-     * Метод findAllPostsByQuery.
+     * Метод findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase.
      * Вывод только активных (поле is_active в таблице posts равно 1),
      * утверждённых модератором (поле moderation_status равно ACCEPTED) постов с датой публикации
      * не позднее текущего момента, текст которых содержит строку поискового запроса query.
      *
-     * @param pageable
+     * @param moderationStatus - статус модерации
+     * @param time - время, ранее которого посты были созданы
+     * @param pageable - настройки пагинации
      * @param query    - строка поискового запроса.
      * @return Page<Post>.
      */
-    @Query("from Post as post where post.text like concat('%', :query, '%') and " +
-            "post.active=true and post.moderationStatus='ACCEPTED' and post.time <= CURRENT_TIMESTAMP")
-    Page<Post> findAllPostsByQuery(Pageable pageable, @Param("query") String query);
+    Page<Post> findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
+            ModerationStatus moderationStatus, LocalDateTime time, String query, Pageable pageable);
 
     /**
-     * Метод findAllPostsByDate.
+     * Метод findByDate.
      * Вывод только активных (поле is_active в таблице posts равно 1),
      * утверждённых модератором (поле moderation_status равно ACCEPTED) постов с датой публикации
      * не позднее текущего момента, на дату, указанную в параметре query.
@@ -60,10 +66,10 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      */
     @Query("from Post as post where to_char(post.time,'YYYY-MM-DD') = :queryDate and " +
             "post.active=true and post.moderationStatus='ACCEPTED' and post.time <= CURRENT_TIMESTAMP")
-    Page<Post> findAllPostsByDate(Pageable pageable, @Param("queryDate") String date);
+    Page<Post> findByDate(Pageable pageable, @Param("queryDate") String date);
 
     /**
-     * Метод findAllByTag.
+     * Метод findByTag.
      * Вывод только активных (поле is_active в таблице posts равно 1),
      * утверждённых модератором (поле moderation_status равно ACCEPTED) постов с датой публикации
      * не позднее текущего момента, по тегу, указанному в параметре.
@@ -74,7 +80,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      */
     @Query("from Post p where p in (select p from Post as p inner join p.tags as tag with tag.name = :tag group by p)" +
             " and p.active = true AND p.moderationStatus = 'ACCEPTED' AND p.time <= CURRENT_TIMESTAMP")
-    Page<Post> findAllByTag(Pageable pageable, @Param("tag") String tag);
+    Page<Post> findByTag(Pageable pageable, @Param("tag") String tag);
 
     /**
      * Метод findAllByActiveAndUser.
@@ -92,7 +98,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * @param moderationStatus - статус поста.
      * @return List<Post>
      */
-    List<Post> findByModerationStatusAndActiveTrue(Post.ModerationStatus moderationStatus);
+    Page<Post> findByModerationStatusAndActiveTrue(ModerationStatus moderationStatus, Pageable pageable);
 
     /**
      * Метод findByModerationStatusAndActiveTrue.
@@ -102,7 +108,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * @param moderator        - авторизованный модератор.
      * @return List<Post>
      */
-    List<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, Post.ModerationStatus moderationStatus);
+    Page<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, ModerationStatus moderationStatus,
+                                                                 Pageable pageable);
 
     /**
      * Метод findAllYearsWithPosts.

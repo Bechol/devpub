@@ -19,7 +19,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostResponse {
 
-    private int count;
+    private long count;
     private List<PostDto> posts;
     private PostDto post;
 }
