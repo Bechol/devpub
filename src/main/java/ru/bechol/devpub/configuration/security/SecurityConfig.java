@@ -33,11 +33,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean(), postService),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
-                .antMatchers("/*", "index", "/login/**", "/css/*", "/fonts/*", "/img/*", "/js/*").permitAll()
-                .antMatchers("/api/auth/*").permitAll()
-                .antMatchers("/api/*").permitAll()
+                .antMatchers("/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/post/search/").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post/search/").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post/byDate").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/post/byTag").permitAll()
@@ -52,7 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutUrl("/api/auth/logout")
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
-                .logoutSuccessUrl("/");
+                .deleteCookies("JSESSIONID");
     }
 
     @Override

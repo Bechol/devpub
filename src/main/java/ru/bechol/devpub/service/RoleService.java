@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.repository.RoleRepository;
+import ru.bechol.devpub.service.aspect.Trace;
 
 import javax.management.relation.RoleNotFoundException;
 
@@ -18,6 +19,7 @@ import javax.management.relation.RoleNotFoundException;
  * @see Messages
  */
 @Service
+@Trace
 public class RoleService {
 
     @Autowired
@@ -35,7 +37,7 @@ public class RoleService {
     public Role findByName(String roleName) throws RoleNotFoundException {
         return roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RoleNotFoundException(
-                        messages.getMessage("role-not-found.exception.message", roleName)
+                        messages.getMessage("warning.not-found-by", "role", "name", roleName)
                 ));
     }
 }

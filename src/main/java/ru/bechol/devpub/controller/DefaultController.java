@@ -31,6 +31,8 @@ public class DefaultController {
     /**
      * Метод getGeneralInfo.
      * GET запрос /api/init.
+     * Возвращает общую информацию о блоге: название блога и подзаголовок для размещения в хэдере сайта,
+     * а также номер телефона, e-mail и информацию об авторских правах для размещения в футере.
      *
      * @return общая информация о блоге в json формате.
      */
@@ -42,6 +44,7 @@ public class DefaultController {
     /**
      * Метод getGeneralSettings.
      * GET запрос /api/settings
+     * Возвращает глобальные настройки блога из таблицы global_settings.
      *
      * @return глобальные настройки блога из таблицы global_settings.
      */
@@ -59,7 +62,7 @@ public class DefaultController {
      * @return глобальные настройки блога из таблицы global_settings.
      */
     @PutMapping("/settings")
-    private ResponseEntity updateGeneralSettings(@RequestBody Map<String, Boolean> settings, Principal principal) {
+    private ResponseEntity<?> updateGeneralSettings(@RequestBody Map<String, Boolean> settings, Principal principal) {
         return globalSettingsService.updateGeneralSettings(settings, principal);
     }
 }

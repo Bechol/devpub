@@ -8,6 +8,19 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.util.Set;
 
+/**
+ * Класс Tag.
+ * Реализация тега.
+ *
+ * @author Oleg Bech.
+ * @version 1.0
+ * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.repository.TagRepository
+ * @see ru.bechol.devpub.service.TagService
+ * @see ru.bechol.devpub.service.PostService
+ * @see ru.bechol.devpub.controller.TagController
+ * @see ru.bechol.devpub.controller.PostController
+ */
 @Getter
 @Setter
 @Entity

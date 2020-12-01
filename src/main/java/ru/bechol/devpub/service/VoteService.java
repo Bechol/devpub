@@ -7,10 +7,10 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;
 import ru.bechol.devpub.repository.VoteRepository;
 import ru.bechol.devpub.request.PostIdRequest;
-import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
 
 import java.security.Principal;
+import java.util.Map;
 
 /**
  * Класс VoteService.
@@ -55,11 +55,11 @@ public class VoteService {
      * @param value         - 1:like, -1:dislike
      * @return Response.
      */
-    public Response vote(PostIdRequest postIdRequest, Principal principal, int value) throws PostNotFoundException {
+    public Map<String, Boolean> vote(PostIdRequest postIdRequest, Principal principal, int value) throws PostNotFoundException {
         User activeUser = userService.findByEmail(principal.getName());
         Post post = postService.findById(postIdRequest.getPostId());
         if (this.isPostVoted(post, activeUser, value)) {
-            return Response.builder().result(false).build();
+            return Map.of("result", false);
         }
         Vote vote = new Vote();
         vote.setPost(post);
@@ -67,6 +67,6 @@ public class VoteService {
         vote.setValue(value);
         voteRepository.save(vote);
         voteRepository.deleteByPostAndUserAndValue(post, activeUser, value * -1);
-        return Response.builder().result(true).build();
+        return Map.of("result", true);
     }
 }

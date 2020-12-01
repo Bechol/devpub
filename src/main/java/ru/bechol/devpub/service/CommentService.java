@@ -3,14 +3,19 @@ package ru.bechol.devpub.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 import ru.bechol.devpub.models.Comment;
 import ru.bechol.devpub.repository.CommentRepository;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.request.CommentRequest;
 import ru.bechol.devpub.response.CommentResponse;
+import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
+
+import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
 
 import java.security.Principal;
 
@@ -27,6 +32,7 @@ import java.security.Principal;
  */
 @Slf4j
 @Service
+@Trace
 public class CommentService {
 
     @Autowired
@@ -48,8 +54,11 @@ public class CommentService {
      * @param principal      - авторизованный пользователь.
      * @return ResponseEntity<?>.
      */
-    public ResponseEntity<?> addComment(CommentRequest commentRequest, Principal principal)
+    public ResponseEntity<?> addComment(CommentRequest commentRequest, Principal principal, BindingResult bindingResult)
             throws PostNotFoundException {
+        if (bindingResult.hasErrors()) {
+            return createBindingErrorResponse(bindingResult, HttpStatus.BAD_REQUEST);
+        }
         String commentPostId = commentRequest.getPostId();
         String parentId = commentRequest.getParentId();
         Comment newPostComment = new Comment();

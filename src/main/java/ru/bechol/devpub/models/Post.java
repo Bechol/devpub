@@ -11,6 +11,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Класс Post.
+ * Реализация поста.
+ *
+ * @author Oleg Bech.
+ * @version 1.0
+ * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.repository.PostRepository
+ * @see ru.bechol.devpub.service.PostService
+ * @see ru.bechol.devpub.controller.PostController
+ */
 @Getter
 @Setter
 @NoArgsConstructor

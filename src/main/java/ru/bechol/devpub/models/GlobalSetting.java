@@ -1,6 +1,7 @@
 package ru.bechol.devpub.models;
 
 import lombok.Data;
+import ru.bechol.devpub.repository.GlobalSettingRepository;
 
 import javax.persistence.*;
 
@@ -11,13 +12,13 @@ import javax.persistence.*;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.GlobalSettingsRepository
+ * @see GlobalSettingRepository
  * @see ru.bechol.devpub.service.GlobalSettingsService
  */
 @Data
 @Entity
 @Table(name = "global_settings")
-public class GlobalSettings {
+public class GlobalSetting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

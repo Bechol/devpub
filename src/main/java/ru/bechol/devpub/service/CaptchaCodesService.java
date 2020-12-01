@@ -1,15 +1,19 @@
 package ru.bechol.devpub.service;
 
 import com.github.cage.Cage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.controller.DefaultController;
+import ru.bechol.devpub.event.DevpubAppEvent;
 import ru.bechol.devpub.models.CaptchaCodes;
 import ru.bechol.devpub.repository.CaptchaCodesRepository;
 import ru.bechol.devpub.response.CaptchaResponse;
+import ru.bechol.devpub.service.aspect.Trace;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,9 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Класс CaptchaCodesService.
@@ -32,33 +34,38 @@ import java.util.concurrent.CompletableFuture;
  * @see CaptchaCodesRepository
  * @see DefaultController
  */
+@Slf4j
 @Service
+@Trace
 public class CaptchaCodesService {
 
     @Autowired
+    private Messages messages;
+    @Autowired
     private Cage cage;
-
     @Autowired
     private CaptchaCodesRepository captchaCodesRepository;
-
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
     @Value("${captcha.storage-limit}")
     private int storageLimit;
 
     /**
      * Метод generateCaptcha.
-     * Генерация капчи.
+     * Генерация новой капчи.
+     * Сохранение капчи в базу.
+     * Публикация события удаления "капч", созданных ранее данного момента времени.
      *
      * @return ResponseEntity<CaptchaResponse>
      * @throws IOException
      */
-    public ResponseEntity<CaptchaResponse> generateCaptcha() throws IOException {
+    public ResponseEntity<?> generateCaptcha() throws IOException {
         CaptchaResponse captchaResponse = createResponse();
-        if (saveCaptchaInfo(captchaResponse).isPresent()) {
-            CompletableFuture.runAsync(this::deleteOldCaptcha);
-            return ResponseEntity.ok().body(captchaResponse);
-        }
-        ;
-        return ResponseEntity.noContent().build();
+        this.saveCaptchaInfo(captchaResponse);
+        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                this, LocalDateTime.now().minusHours(storageLimit), DevpubAppEvent.EventType.DELETE_CAPTCHA
+        ));
+        return ResponseEntity.ok(captchaResponse);
     }
 
     /**
@@ -85,15 +92,12 @@ public class CaptchaCodesService {
         String captchaToken = cage.getTokenGenerator().next();
         String encodedString = null;
         File file = new File("captcha");
-        OutputStream os = new FileOutputStream(file, false);
-        try {
+        try (OutputStream os = new FileOutputStream(file, false)) {
             cage.draw(captchaToken, os);
             byte[] fileContent = FileUtils.readFileToByteArray(file);
             encodedString = Base64.getEncoder().encodeToString(fileContent);
         } catch (IOException exception) {
             exception.printStackTrace();
-        } finally {
-            os.close();
         }
         return CaptchaResponse.builder()
                 .code(captchaToken)
@@ -109,18 +113,12 @@ public class CaptchaCodesService {
      * @param captchaResponse ответ на запрос GET /api/auth/captcha
      * @return результат сохранения в базу.
      */
-    private Optional<CaptchaCodes> saveCaptchaInfo(CaptchaResponse captchaResponse) {
+    private void saveCaptchaInfo(CaptchaResponse captchaResponse) {
         CaptchaCodes captchaCodes = new CaptchaCodes();
         captchaCodes.setCode(captchaResponse.getCode());
         captchaCodes.setSecretCode(captchaResponse.getSecret());
-        return Optional.of(captchaCodesRepository.save(captchaCodes));
-    }
-
-    /**
-     * Метод deleteOldCaptcha.
-     * Удаление из таблицы captcha_codes всех записей старше заданного количества времени..
-     */
-    private void deleteOldCaptcha() {
-        captchaCodesRepository.deleteOld(LocalDateTime.now().minusHours(storageLimit));
+        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                this, captchaCodes, DevpubAppEvent.EventType.SAVE_CAPTCHA
+        ));
     }
 }

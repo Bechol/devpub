@@ -26,7 +26,7 @@ public class ImageController {
     /**
      * Метод uploadImage
      * POST запрос /api/image.
-     *
+     * Метод загружает на cloudinary изображение и возвращает ссылку.
      * @param image - файл картинки для загрузки
      * @return ResponseEntity.
      */

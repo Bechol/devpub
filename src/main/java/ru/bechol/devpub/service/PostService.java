@@ -4,11 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
+import ru.bechol.devpub.event.DevpubAppEvent;
+import ru.bechol.devpub.models.GlobalSetting;
+import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.Role;
 import ru.bechol.devpub.models.User;
@@ -22,6 +26,7 @@ import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.enums.ModerationStatus;
 import ru.bechol.devpub.service.enums.PostStatus;
 import ru.bechol.devpub.service.enums.SortMode;
+import ru.bechol.devpub.service.exception.CodeNotFoundException;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
 import ru.bechol.devpub.service.helper.PostMapperHelper;
 
@@ -37,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
+
 /**
  * Класс PostService.
  * Сервисный слой для Post.
@@ -47,6 +54,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@Trace
 public class PostService {
 
     private static final String ROLE_MODERATOR = "ROLE_MODERATOR";
@@ -64,6 +72,10 @@ public class PostService {
     private Messages messages;
     @Autowired
     private PostMapperHelper postMapperHelper;
+    @Autowired
+    private GlobalSettingsService globalSettingsService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
 
     /**
@@ -222,12 +234,10 @@ public class PostService {
      * @param bindingResult - результаты валидации данных нового поста.
      * @return - ResponseEntity<Response<?>>.
      */
-    public ResponseEntity<Response<?>> createNewPost(Principal principal, PostRequest postRequest,
-                                                     BindingResult bindingResult) throws RoleNotFoundException {
+    public ResponseEntity<?> createNewPost(Principal principal, PostRequest postRequest, BindingResult bindingResult)
+            throws RoleNotFoundException, CodeNotFoundException {
         if (bindingResult.hasErrors()) {
-            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
-                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
+            return createBindingErrorResponse(bindingResult, HttpStatus.OK);
         }
         Role roleModerator = roleService.findByName("ROLE_MODERATOR");
         Post newPost = new Post();
@@ -235,14 +245,31 @@ public class PostService {
         newPost.setActive(postRequest.isActive());
         newPost.setTitle(postRequest.getTitle());
         newPost.setText(postRequest.getText());
-        newPost.setModerationStatus(ModerationStatus.NEW);
+        newPost.setModerationStatus(this.acceptModerationStatus());
         newPost.setUser(userService.findByEmail(principal.getName()));
         newPost.setModerator(roleModerator.getUsers().stream().findFirst().orElse(null));
         if (postRequest.getTags().size() > 0) {
             newPost.setTags(tagService.mapTags(postRequest.getTags()));
         }
-        postRepository.save(newPost);
+        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                this, newPost, DevpubAppEvent.EventType.SAVE_POST
+        ));
         return ResponseEntity.ok(Response.builder().result(true).build());
+    }
+
+    /**
+     * Метод acceptModerationStatus.
+     * Выбор статуса модерации в зависимости от настройки премодерации.
+     *
+     * @return ModerationStatus.NEW - если установлен режим премодерации.
+     * @throws CodeNotFoundException - если настрока не найдена по коду.
+     */
+    private ModerationStatus acceptModerationStatus() throws CodeNotFoundException {
+        if (globalSettingsService.checkSetting("POST_PREMODERATION", GlobalSetting.SettingValue.YES)) {
+            return ModerationStatus.NEW;
+        } else {
+            return ModerationStatus.ACCEPTED;
+        }
     }
 
     /**
@@ -255,7 +282,7 @@ public class PostService {
      */
     public ResponseEntity<PostDto> showPost(long postId, Principal principal) throws PostNotFoundException {
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
-                messages.getMessage("post-not-found.exception.message")));
+                messages.getMessage("warning.not-found", "post")));
         User activeUser = null;
         if (principal != null) {
             activeUser = userService.findByEmail(principal.getName());
@@ -329,11 +356,14 @@ public class PostService {
      * @param principal       - авторизованный пользователь.
      * @return - ResponseEntity<?>.
      */
-    public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal)
-            throws PostNotFoundException {
+    public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal,
+                                      BindingResult bindingResult) throws PostNotFoundException {
+        if (bindingResult.hasErrors()) {
+            return createBindingErrorResponse(bindingResult, HttpStatus.OK);
+        }
         User activeUser = userService.findByEmail(principal.getName());
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
-                messages.getMessage("post-not-found.exception.message")));
+                messages.getMessage("warning.not-found", "post")));
         post.setActive(editPostRequest.isActive());
         post.setTitle(editPostRequest.getTitle());
         post.setText(editPostRequest.getText());
@@ -396,7 +426,7 @@ public class PostService {
      * Метод createCalendarData.
      * Метод выводит количества публикаций на каждую дату переданного в параметре year года или текущего года,
      * если параметр year не задан. В параметре years всегда возвращается список всех годов, з
-     * а которые была хотя бы одна публикация, в порядке возврастания.
+     * а которые была хотя бы одна публикация, в порядке возрастания.
      *
      * @param year - год.
      * @return CalendarResponse.
@@ -432,6 +462,8 @@ public class PostService {
      */
     public Post findById(long postId) throws PostNotFoundException {
         return postRepository.findById(postId).
-                orElseThrow(() -> new PostNotFoundException(messages.getMessage("post-not-found.exception.message")));
+                orElseThrow(() -> new PostNotFoundException(
+                        messages.getMessage("warning.not-found", "post")
+                ));
     }
 }

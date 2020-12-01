@@ -4,28 +4,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.bechol.devpub.request.PostIdRequest;
 import ru.bechol.devpub.request.PostRequest;
 import ru.bechol.devpub.response.PostDto;
 import ru.bechol.devpub.response.PostResponse;
-import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.PostService;
 import ru.bechol.devpub.service.VoteService;
 import ru.bechol.devpub.service.enums.ModerationStatus;
 import ru.bechol.devpub.service.enums.PostStatus;
 import ru.bechol.devpub.service.enums.SortMode;
-import ru.bechol.devpub.service.exception.ModerationStatusNotFoundException;
-import ru.bechol.devpub.service.exception.PostNotFoundException;
-import ru.bechol.devpub.service.exception.PostStatusNotFoundException;
-import ru.bechol.devpub.service.exception.SortModeNotFoundException;
+import ru.bechol.devpub.service.exception.*;
 
 import javax.management.relation.RoleNotFoundException;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Класс PostController.
@@ -143,9 +137,9 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @PostMapping
-    public ResponseEntity<Response<?>> createNewPost(@Valid @RequestBody PostRequest postRequest,
-                                                     BindingResult bindingResult, Principal principal)
-            throws RoleNotFoundException {
+    public ResponseEntity<?> createNewPost(@Valid @RequestBody PostRequest postRequest,
+                                           BindingResult bindingResult, Principal principal)
+            throws RoleNotFoundException, CodeNotFoundException {
         return postService.createNewPost(principal, postRequest, bindingResult);
     }
 
@@ -181,12 +175,7 @@ public class PostController {
     @PutMapping("/{id}")
     public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
                                       @PathVariable("id") long postId, Principal principal) throws PostNotFoundException {
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
-                    .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
-        }
-        return postService.editPost(editPostRequest, postId, principal);
+        return postService.editPost(editPostRequest, postId, principal, bindingResult);
     }
 
 
@@ -222,7 +211,7 @@ public class PostController {
      */
     @PostMapping("/like")
     @ResponseStatus(HttpStatus.OK)
-    public Response<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
+    public Map<String, Boolean> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
             throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, 1);
     }
@@ -241,7 +230,7 @@ public class PostController {
      */
     @PostMapping("/dislike")
     @ResponseStatus(HttpStatus.OK)
-    public Response<?> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
+    public Map<String, Boolean> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
             throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, -1);
     }

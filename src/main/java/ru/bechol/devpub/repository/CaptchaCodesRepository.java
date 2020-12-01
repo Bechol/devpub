@@ -1,11 +1,11 @@
 package ru.bechol.devpub.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.CaptchaCodes;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -25,7 +25,8 @@ public interface CaptchaCodesRepository extends JpaRepository<CaptchaCodes, Long
     /**
      * Метод findByCodeAndSecretCode.
      * Поиск по коду и секретному коду капчи.
-     * @param code - код на картинке капчи.
+     *
+     * @param code       - код на картинке капчи.
      * @param secretCode - секретный код.
      * @return Optional<CaptchaCodes>.
      */
@@ -37,7 +38,8 @@ public interface CaptchaCodesRepository extends JpaRepository<CaptchaCodes, Long
      *
      * @param storageTimeLimit - момент времени, созданные ранее которого записи считаются устаревшими.
      */
-    @Query(value = "DELETE FROM captcha_codes c where c.time < :storageTimeLimit", nativeQuery = true)
-    void deleteOld(@Param("storageTimeLimit") LocalDateTime storageTimeLimit);
+    @Transactional
+    @Modifying
+    void deleteByTimeBefore(LocalDateTime storageTimeLimit);
 
 }

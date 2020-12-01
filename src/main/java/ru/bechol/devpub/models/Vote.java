@@ -8,6 +8,16 @@ import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Класс Vote.
+ * Реализация лайка/дизлайка.
+ *
+ * @author Oleg Bech.
+ * @version 1.0
+ * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.repository.VoteRepository
+ * @see ru.bechol.devpub.service.VoteService
+ */
 @Data
 @NoArgsConstructor
 @Entity

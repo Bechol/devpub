@@ -11,6 +11,7 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.EditProfileRequest;
 import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.service.aspect.Trace;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -25,6 +26,7 @@ import java.util.Map;
  * @email oleg071984@gmail.com
  */
 @Service
+@Trace
 public class ProfileService {
 
     @Autowired
@@ -122,11 +124,12 @@ public class ProfileService {
      */
     private void validateEmail(User user, String newEmail, Map<String, String> errorsMap) {
         if (!Strings.isNotEmpty(newEmail)) {
-            errorsMap.put("name", messages.getMessage("ve.email", newEmail));
+            errorsMap.put("name", messages.getMessage("warning.is-empty", "email"));
             return;
         }
         if (!newEmail.equals(user.getEmail()) && userRepository.findByEmail(newEmail).isPresent()) {
-            errorsMap.put("email", messages.getMessage("ve.email-exists", user.getEmail()));
+            errorsMap.put("email", messages.getMessage("warning.already-exist",
+                    "user", "email", user.getEmail()));
         } else {
             user.setEmail(newEmail);
         }
@@ -142,11 +145,12 @@ public class ProfileService {
      */
     private void validateName(User user, String newUserName, Map<String, String> errorsMap) {
         if (!Strings.isNotEmpty(newUserName)) {
-            errorsMap.put("name", messages.getMessage("ve.user-name", newUserName));
+            errorsMap.put("name", messages.getMessage("warning.is-empty", "username"));
             return;
         }
         if (!newUserName.equals(user.getName()) && userRepository.findByName(newUserName).isPresent()) {
-            errorsMap.put("name", messages.getMessage("ve.name-exists", newUserName));
+            errorsMap.put("name", messages.getMessage("warning.already-exist",
+                    "user", "name", newUserName));
         } else {
             user.setName(newUserName);
         }
@@ -162,7 +166,7 @@ public class ProfileService {
      */
     private void validatePassword(User user, String newPassword, Map<String, String> errorsMap) {
         if (!Strings.isNotEmpty(newPassword)) {
-            errorsMap.put("password", messages.getMessage("ve.password-null", newPassword));
+            errorsMap.put("password", messages.getMessage("warning.is-empty", "password"));
             return;
         }
         if (Strings.isNotEmpty(newPassword) && newPassword.length() < 6) {

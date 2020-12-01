@@ -1,7 +1,10 @@
 package ru.bechol.devpub.service;
 
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import ru.bechol.devpub.event.DevpubAppEvent;
+import ru.bechol.devpub.models.GlobalSetting;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;
@@ -22,6 +27,7 @@ import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.StatisticResponse;
 import ru.bechol.devpub.response.UserData;
 import ru.bechol.devpub.service.enums.ModerationStatus;
+import ru.bechol.devpub.service.exception.CodeNotFoundException;
 import ru.bechol.devpub.service.exception.UserNotFoundException;
 
 import javax.management.relation.RoleNotFoundException;
@@ -29,6 +35,7 @@ import java.security.Principal;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
+import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
 
 /**
  * Класс UserService.
@@ -44,6 +51,8 @@ import java.util.stream.Collectors;
 public class UserService implements UserDetailsService {
 
     private final static String ROLE_USER = "ROLE_USER";
+    private final static Map<String, Boolean> RESULT_TRUE_MAP = Map.of("result", true);
+    private final static Map<String, Boolean> RESULT_FALSE_MAP = Map.of("result", false);
     @Value("${time-offset}")
     private String clientZoneOffsetId;
     @Autowired
@@ -64,6 +73,8 @@ public class UserService implements UserDetailsService {
     private VoteRepository voteRepository;
     @Autowired
     private GlobalSettingsService globalSettingsService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Метод registrateNewUser.
@@ -73,21 +84,26 @@ public class UserService implements UserDetailsService {
      * @return ResponseEntity<?>.
      */
     public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult)
-            throws RoleNotFoundException {
+            throws RoleNotFoundException, CodeNotFoundException {
+        if(globalSettingsService.checkSetting("MULTIUSER_MODE", GlobalSetting.SettingValue.NO)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messages.getMessage("multi-user.off"));
+        }
         if (!captchaCodesService.captchaIsExist(registerRequest.getCaptcha(), registerRequest.getCaptcha_secret())) {
             bindingResult.addError(new FieldError(
                     "captcha", "captcha", messages.getMessage("cp.errors.captcha-code")));
         }
         if (bindingResult.hasErrors()) {
-            return createResponseWithErrorMap(bindingResult);
+            return createBindingErrorResponse(bindingResult, HttpStatus.OK);
         }
         User user = new User();
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
         user.setModerator(false);
-        userRepository.save(this.setUserRole(user));
-        return ResponseEntity.ok().body(Response.builder().result(true).build());
+        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                this, this.setUserRole(user), DevpubAppEvent.EventType.SAVE_USER
+        ));
+        return ResponseEntity.ok(RESULT_TRUE_MAP);
     }
 
     /**
@@ -111,8 +127,20 @@ public class UserService implements UserDetailsService {
      */
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(
-                messages.getMessage("user-not-found-by.exception.message", "email", email), "email", email
+                messages.getMessage("warning.not-found-by", "user", "email", email),
+                "email", email
         ));
+    }
+
+    /**
+     * Метод isUserNotExistByEmail.
+     * Проверяет, существует что пользователь с данным email-ом не существует.
+     *
+     * @param email - почта пользователя.
+     * @return true - если пользователь не существует.
+     */
+    public boolean isUserNotExistByEmail(String email) {
+        return Strings.isNotEmpty(email) && userRepository.findByEmail(email).isEmpty();
     }
 
     /**
@@ -126,19 +154,23 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
-                messages.getMessage("user.not-found.by-email", email)));
+                messages.getMessage("warning.not-found-by", "user", "email", email)));
     }
 
     /**
      * Метод checkAuthorization.
-     * Проверка авторизации.
+     * Метод возвращает информацию о текущем авторизованном пользователе, если он авторизован.
+     * Проверяет, сохранён ли идентификатор текущей сессии в списке авторизованных.
+     * Значение moderationCount содержит количество постов необходимых для проверки модераторами.
+     * Считаются посты имеющие статус NEW и не проверерны модератором.
+     * Если пользователь не модератор возращать 0 в moderationCount.
      *
      * @param authorizedUser авторизованный пользователь.
      * @return ResponseEntity.
      */
     public ResponseEntity<?> checkAuthorization(User authorizedUser) {
         if (authorizedUser == null) {
-            return ResponseEntity.ok().body(Response.builder().result(false).build());
+            return ResponseEntity.ok(RESULT_FALSE_MAP);
         }
         return ResponseEntity.ok().body(Response.builder().result(true)
                 .user(UserData.builder()
@@ -155,21 +187,27 @@ public class UserService implements UserDetailsService {
      * Метод checkAndSendForgotPasswordMail.
      * Формирование и отправка письма с ссылкой для восстановления пароля.
      *
-     * @param email - email для отправки.
+     * @param email         - email для отправки.
+     * @param bindingResult - результат валидации данных, ввуденых пользователем
      */
-    public ResponseEntity<?> checkAndSendForgotPasswordMail(String email) {
+    public Map<String, Boolean> checkAndSendForgotPasswordMail(String email, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return RESULT_FALSE_MAP;
+        }
         User user = userRepository.findByEmail(email).orElse(null);
         if (user != null) {
             user.setForgotCode(UUID.randomUUID().toString());
-            userRepository.save(user);
+            applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                    this, user, DevpubAppEvent.EventType.SAVE_USER
+            ));
             emailService.send(user.getEmail(), messages.getMessage("rp.mail-subject"),
                     messages.getMessage(
                             "rp.message-text", user.getName(), createRestorePasswordLink(user.getForgotCode())
                     )
             );
-            return ResponseEntity.ok().body(Response.builder().result(true).build());
+            return RESULT_TRUE_MAP;
         }
-        return ResponseEntity.ok().body(Response.builder().result(false).build());
+        return RESULT_FALSE_MAP;
     }
 
     /**
@@ -204,24 +242,14 @@ public class UserService implements UserDetailsService {
                     messages.getMessage("cp.errors.forgot-code")));
         }
         if (bindingResult.hasErrors()) {
-            return createResponseWithErrorMap(bindingResult);
+            return createBindingErrorResponse(bindingResult, HttpStatus.OK);
         }
         user.setPassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
-        userRepository.save(user);
+        user.setForgotCode(null);
+        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                this, user, DevpubAppEvent.EventType.SAVE_USER
+        ));
         return ResponseEntity.ok().body(Response.builder().result(true).build());
-    }
-
-    /**
-     * Метод createResponseWithErrorMap.
-     * Создание ответа с перечнем ошибок валидации данных запроса.
-     *
-     * @param bindingResult - результаты валидации.
-     * @return ResponseEntity.
-     */
-    private ResponseEntity<?> createResponseWithErrorMap(BindingResult bindingResult) {
-        Map<String, String> errorMap = bindingResult.getFieldErrors().stream()
-                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-        return ResponseEntity.ok().body(Response.builder().result(false).errors(errorMap).build());
     }
 
     /**

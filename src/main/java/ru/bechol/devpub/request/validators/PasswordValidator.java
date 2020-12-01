@@ -22,7 +22,7 @@ public class PasswordValidator implements ConstraintValidator<ValidPassword, Str
 
     @Override
     public boolean isValid(String password, ConstraintValidatorContext context) {
-        return Strings.isNotEmpty(password) && password.length() > 6;
+        return Strings.isNotEmpty(password) && password.length() >= 6;
     }
 
 }

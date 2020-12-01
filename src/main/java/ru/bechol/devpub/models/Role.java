@@ -9,6 +9,17 @@ import org.springframework.security.core.GrantedAuthority;
 import javax.persistence.*;
 import java.util.List;
 
+/**
+ * Класс Role.
+ * Реализация роли пользователя.
+ *
+ * @author Oleg Bech.
+ * @version 1.0
+ * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.repository.RoleRepository
+ * @see ru.bechol.devpub.service.RoleService
+ * @see ru.bechol.devpub.controller.ApiAuthController
+ */
 @Getter
 @Setter
 @NoArgsConstructor

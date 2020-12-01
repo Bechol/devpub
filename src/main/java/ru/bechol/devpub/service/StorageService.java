@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.response.Response;
+import ru.bechol.devpub.service.aspect.Trace;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +36,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
+@Trace
 public class StorageService {
 
     @Autowired

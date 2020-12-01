@@ -10,6 +10,7 @@ import ru.bechol.devpub.models.Tag;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.TagRepository;
 import ru.bechol.devpub.response.TagResponse;
+import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.service.enums.ModerationStatus;
 
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@Trace
 public class TagService {
 
     @Autowired
