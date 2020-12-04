@@ -27,6 +27,7 @@ import ru.bechol.devpub.service.enums.ModerationStatus;
 import ru.bechol.devpub.service.enums.PostStatus;
 import ru.bechol.devpub.service.enums.SortMode;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
+import ru.bechol.devpub.service.exception.ModerationStatusNotFoundException;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
 import ru.bechol.devpub.service.helper.PostMapperHelper;
 
@@ -101,10 +102,10 @@ public class PostService {
      * @param sortMode -  режим вывода (сортировка).
      * @return - ResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) {
+    public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) throws ModerationStatusNotFoundException {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByModerationStatusAndActiveTrueAndTimeBefore(
-                ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+                ModerationStatus.fromValue("accepted"), LocalDateTime.now(), pageable);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(postPages.getContent(),
                 true, false, false);
         switch (sortMode) {
