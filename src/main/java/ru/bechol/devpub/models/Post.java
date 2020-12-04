@@ -35,6 +35,7 @@ public class Post {
     @Column(name = "is_active", nullable = false)
     private boolean active;
     @Enumerated(EnumType.STRING)
+    @Column(name="moderation_status")
     private ModerationStatus moderationStatus;
     @JsonManagedReference
     @ManyToOne
