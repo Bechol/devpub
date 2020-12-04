@@ -103,7 +103,7 @@ public class PostService {
     public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByModerationStatusAndActiveTrueAndTimeBefore(
-                Post.ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+                "ACCEPTED", LocalDateTime.now(), pageable);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(postPages.getContent(),
                 true, false, false);
         switch (sortMode) {
@@ -135,7 +135,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository
                 .findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
-                        Post.ModerationStatus.ACCEPTED, LocalDateTime.now(), query, pageable);
+                        "ACCEPTED", LocalDateTime.now(), query, pageable);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(
                 postPages.getContent(), true, false, false
         );
@@ -192,13 +192,13 @@ public class PostService {
         List<Post> myPostList = userService.findByEmail(principal.getName()).getPosts();
         switch (postStatus) {
             case PENDING:
-                myPostList = this.filterActivePostByModerationStatus(myPostList, Post.ModerationStatus.NEW);
+                myPostList = this.filterActivePostByModerationStatus(myPostList, "NEW");
                 break;
             case DECLINED:
-                myPostList = this.filterActivePostByModerationStatus(myPostList, Post.ModerationStatus.DECLINED);
+                myPostList = this.filterActivePostByModerationStatus(myPostList, "DECLINED");
                 break;
             case PUBLISHED:
-                myPostList = this.filterActivePostByModerationStatus(myPostList, Post.ModerationStatus.ACCEPTED);
+                myPostList = this.filterActivePostByModerationStatus(myPostList, "ACCEPTED");
                 break;
             default:
                 myPostList = myPostList.stream().filter(post -> !post.isActive()).collect(Collectors.toList());
@@ -218,7 +218,7 @@ public class PostService {
      * @param moderationStatus - статус модерации.
      * @return - отфильтрованный список постов.
      */
-    private List<Post> filterActivePostByModerationStatus(List<Post> postList, Post.ModerationStatus moderationStatus) {
+    private List<Post> filterActivePostByModerationStatus(List<Post> postList, String moderationStatus) {
         return postList.stream().filter(post ->
                 post.isActive() && post.getModerationStatus().equals(moderationStatus)).collect(Collectors.toList()
         );
@@ -263,11 +263,11 @@ public class PostService {
      * @return ModerationStatus.NEW - если установлен режим премодерации.
      * @throws CodeNotFoundException - если настрока не найдена по коду.
      */
-    private Post.ModerationStatus acceptModerationStatus() throws CodeNotFoundException {
-        if (globalSettingsService.checkSetting("POST_PREMODERATION", GlobalSetting.SettingValue.YES)) {
-            return Post.ModerationStatus.NEW;
+    private String acceptModerationStatus() throws CodeNotFoundException {
+        if (globalSettingsService.checkSetting("POST_PREMODERATION", "YES")) {
+            return "NEW";
         } else {
-            return Post.ModerationStatus.ACCEPTED;
+            return "ACCEPTED";
         }
     }
 
@@ -323,23 +323,22 @@ public class PostService {
      * @param moderationStatus - статус модерации.
      * @return PostResponse.
      */
-    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit,
-                                              Post.ModerationStatus moderationStatus) {
+    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit, String moderationStatus) {
         User moderator = userService.findByEmail(principal.getName());
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");
         Page<Post> queryListResult;
         switch (moderationStatus) {
-            case ACCEPTED:
+            case "ACCEPTED":
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
-                        Post.ModerationStatus.ACCEPTED, pageable);
+                        "ACCEPTED", pageable);
                 break;
-            case DECLINED:
+            case "DECLINED":
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
-                        Post.ModerationStatus.DECLINED, pageable);
+                        "DECLINED", pageable);
                 break;
             default:
                 queryListResult = postRepository.
-                        findByModerationStatusAndActiveTrue(Post.ModerationStatus.NEW, pageable);
+                        findByModerationStatusAndActiveTrue("NEW", pageable);
         }
         List<PostDto> resultList = postMapperHelper.mapPostList(queryListResult.getContent(),
                 true, false, false);
@@ -369,7 +368,7 @@ public class PostService {
         post.setTime(this.preparePostCreationTime(editPostRequest.getTimestamp()));
         post.setTags(tagService.mapTags(editPostRequest.getTags()));
         if (!activeUser.isModerator()) {
-            post.setModerationStatus(Post.ModerationStatus.NEW);
+            post.setModerationStatus("NEW");
         }
         postRepository.save(post);
         return ResponseEntity.ok(Response.builder().result(true).build());
@@ -388,9 +387,9 @@ public class PostService {
         User activeUser = userService.findByEmail(principal.getName());
         Post post = this.findById(moderationRequest.getPostId());
         if (moderationRequest.getDecision().equals("accept")) {
-            post.setModerationStatus(Post.ModerationStatus.ACCEPTED);
+            post.setModerationStatus("ACCEPTED");
         } else {
-            post.setModerationStatus(Post.ModerationStatus.DECLINED);
+            post.setModerationStatus("DECLINED");
         }
         post.setModeratedBy(activeUser);
         postRepository.save(post);
@@ -445,7 +444,7 @@ public class PostService {
      * @param moderationStatus - статус модерации.
      * @return -
      */
-    public long findPostsByStatus(Post.ModerationStatus moderationStatus) {
+    public long findPostsByStatus(String moderationStatus) {
         List<Post> newPosts = postRepository
                 .findByModerationStatusAndActiveTrue(moderationStatus, null).getContent();
         return !newPosts.isEmpty() ? newPosts.size() : 0;

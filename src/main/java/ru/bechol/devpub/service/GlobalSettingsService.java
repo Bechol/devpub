@@ -48,7 +48,7 @@ public class GlobalSettingsService {
     public ResponseEntity<Map<String, Boolean>> createGeneralSettingsMap() {
         Map<String, Boolean> settingsMap = globalSettingRepository.findAll().stream()
                 .collect(Collectors.toMap(GlobalSetting::getCode,
-                        value -> value.getValue().name().equals(GlobalSetting.SettingValue.YES.name()))
+                        value -> value.getValue().equals("YES"))
                 );
         return ResponseEntity.ok(settingsMap);
     }
@@ -71,9 +71,9 @@ public class GlobalSettingsService {
         for (int i = 0; i < generalSettings.size(); i++) {
             GlobalSetting tmpGs = generalSettings.get(i);
             if (generalSettingsMap.get(tmpGs.getCode())) {
-                tmpGs.setValue(GlobalSetting.SettingValue.YES);
+                tmpGs.setValue("YES");
             } else {
-                tmpGs.setValue(GlobalSetting.SettingValue.NO);
+                tmpGs.setValue("NO");
             }
             generalSettings.set(i, tmpGs);
         }
@@ -91,7 +91,7 @@ public class GlobalSettingsService {
      * @return - true - если настройка найдена и её значение YES.
      * @throws CodeNotFoundException - когда настройка не найдена по коду.
      */
-    public boolean checkSetting(String code, GlobalSetting.SettingValue settingValue) throws CodeNotFoundException {
+    public boolean checkSetting(String code, String settingValue) throws CodeNotFoundException {
         GlobalSetting globalSetting = globalSettingRepository.findByCode(code)
                 .orElseThrow(() -> new CodeNotFoundException(
                         messages.getMessage("warning.not-found-by", "Global setting", "code", code)

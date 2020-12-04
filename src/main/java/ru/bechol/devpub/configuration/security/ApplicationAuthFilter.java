@@ -76,7 +76,7 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
                         .photo(user.getPhotoLink())
                         .email(user.getEmail())
                         .moderation(user.isModerator())
-                        .moderationCount(user.isModerator() ? postService.findPostsByStatus(Post.ModerationStatus.NEW) : 0)
+                        .moderationCount(user.isModerator() ? postService.findPostsByStatus("NEW") : 0)
                         .settings(user.isModerator()).build()).build();
     }
 

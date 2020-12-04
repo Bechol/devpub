@@ -15,7 +15,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.bechol.devpub.event.DevpubAppEvent;
-import ru.bechol.devpub.models.GlobalSetting;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;
@@ -84,7 +83,7 @@ public class UserService implements UserDetailsService {
      */
     public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult)
             throws RoleNotFoundException, CodeNotFoundException {
-        if(globalSettingsService.checkSetting("MULTIUSER_MODE", GlobalSetting.SettingValue.NO)) {
+        if(globalSettingsService.checkSetting("MULTIUSER_MODE", "NO")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messages.getMessage("multi-user.off"));
         }
         if (!captchaCodesService.captchaIsExist(registerRequest.getCaptcha(), registerRequest.getCaptcha_secret())) {
@@ -177,7 +176,7 @@ public class UserService implements UserDetailsService {
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())
                         .photo(authorizedUser.getPhotoLink())
-                        .moderationCount(postService.findPostsByStatus(Post.ModerationStatus.NEW))
+                        .moderationCount(postService.findPostsByStatus("NEW"))
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
     }

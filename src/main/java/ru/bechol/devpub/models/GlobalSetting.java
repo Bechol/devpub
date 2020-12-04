@@ -27,11 +27,6 @@ public class GlobalSetting {
     private String code;
     @Column(nullable = false)
     private String name;
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SettingValue value;
-
-    public enum SettingValue {
-        YES, NO;
-    }
+    private String value;
 }

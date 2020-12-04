@@ -33,8 +33,8 @@ public class Post {
     private long id;
     @Column(name = "is_active", nullable = false)
     private boolean active;
-    @Enumerated(EnumType.STRING)
-    private ModerationStatus moderationStatus;
+    @Column(name = "moderation_status", nullable = false)
+    private String moderationStatus;
     @JsonManagedReference
     @ManyToOne
     @JoinColumn(name = "moderator_id")
@@ -67,10 +67,4 @@ public class Post {
             joinColumns = {@JoinColumn(name = "post_id")},
             inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private List<Tag> tags;
-
-
-    public enum ModerationStatus {
-
-        NEW, ACCEPTED, DECLINED
-    }
 }
