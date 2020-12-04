@@ -91,7 +91,7 @@ public class TagService {
      * @return true - если не соблюдены все условия проверки.
      */
     private boolean checkPost(Post post) {
-        return !(post.isActive() && post.getModerationStatus().equals(Post.ModerationStatus.ACCEPTED) &&
+        return !(post.isActive() && post.getModerationStatus().equals("ACCEPTED") &&
                 post.getTime().isBefore(LocalDateTime.now()));
     }
 }

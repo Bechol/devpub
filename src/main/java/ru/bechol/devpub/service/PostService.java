@@ -328,11 +328,11 @@ public class PostService {
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");
         Page<Post> queryListResult;
         switch (moderationStatus) {
-            case "ACCEPTED":
+            case "accepted":
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
                         "ACCEPTED", pageable);
                 break;
-            case "DECLINED":
+            case "declined":
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
                         "DECLINED", pageable);
                 break;

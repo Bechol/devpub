@@ -196,7 +196,7 @@ public class PostController {
     public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
                                           @RequestParam String status, Principal principal)
             throws ModerationStatusNotFoundException {
-        return postService.findPostsOnModeration(principal, offset, limit, Post.ModerationStatus.valueOf(status));
+        return postService.findPostsOnModeration(principal, offset, limit, status);
     }
 
     /**
