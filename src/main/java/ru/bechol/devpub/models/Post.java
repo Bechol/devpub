@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.bechol.devpub.service.enums.ModerationStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -34,9 +33,8 @@ public class Post {
     private long id;
     @Column(name = "is_active", nullable = false)
     private boolean active;
-    @Enumerated(EnumType.STRING)
-    @Column(name="moderation_status")
-    private ModerationStatus moderationStatus;
+    @Column(name = "moderation_status")
+    private String moderationStatus;
     @JsonManagedReference
     @ManyToOne
     @JoinColumn(name = "moderator_id")

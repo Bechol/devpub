@@ -10,6 +10,7 @@ import ru.bechol.devpub.models.GlobalSetting;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.GlobalSettingRepository;
 import ru.bechol.devpub.response.ErrorResponse;
+import ru.bechol.devpub.service.enums.SettingValue;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 
 import java.security.Principal;
@@ -48,7 +49,7 @@ public class GlobalSettingsService {
     public ResponseEntity<Map<String, Boolean>> createGeneralSettingsMap() {
         Map<String, Boolean> settingsMap = globalSettingRepository.findAll().stream()
                 .collect(Collectors.toMap(GlobalSetting::getCode,
-                        value -> value.getValue().name().equals(GlobalSetting.SettingValue.YES.name()))
+                        value -> value.toString().equals(SettingValue.YES.toString()))
                 );
         return ResponseEntity.ok(settingsMap);
     }
@@ -71,9 +72,9 @@ public class GlobalSettingsService {
         for (int i = 0; i < generalSettings.size(); i++) {
             GlobalSetting tmpGs = generalSettings.get(i);
             if (generalSettingsMap.get(tmpGs.getCode())) {
-                tmpGs.setValue(GlobalSetting.SettingValue.YES);
+                tmpGs.setValue(SettingValue.YES.toString());
             } else {
-                tmpGs.setValue(GlobalSetting.SettingValue.NO);
+                tmpGs.setValue(SettingValue.NO.toString());
             }
             generalSettings.set(i, tmpGs);
         }
@@ -91,11 +92,11 @@ public class GlobalSettingsService {
      * @return - true - если настройка найдена и её значение YES.
      * @throws CodeNotFoundException - когда настройка не найдена по коду.
      */
-    public boolean checkSetting(String code, GlobalSetting.SettingValue settingValue) throws CodeNotFoundException {
+    public boolean checkSetting(String code, SettingValue settingValue) throws CodeNotFoundException {
         GlobalSetting globalSetting = globalSettingRepository.findByCode(code)
                 .orElseThrow(() -> new CodeNotFoundException(
                         messages.getMessage("warning.not-found-by", "Global setting", "code", code)
                 ));
-        return globalSetting.getValue().equals(settingValue);
+        return globalSetting.getValue().equals(settingValue.toString());
     }
 }

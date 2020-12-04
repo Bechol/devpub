@@ -27,6 +27,7 @@ import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.StatisticResponse;
 import ru.bechol.devpub.response.UserData;
 import ru.bechol.devpub.service.enums.ModerationStatus;
+import ru.bechol.devpub.service.enums.SettingValue;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 import ru.bechol.devpub.service.exception.UserNotFoundException;
 
@@ -85,7 +86,7 @@ public class UserService implements UserDetailsService {
      */
     public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult)
             throws RoleNotFoundException, CodeNotFoundException {
-        if(globalSettingsService.checkSetting("MULTIUSER_MODE", GlobalSetting.SettingValue.NO)) {
+        if(globalSettingsService.checkSetting("MULTIUSER_MODE", SettingValue.NO)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messages.getMessage("multi-user.off"));
         }
         if (!captchaCodesService.captchaIsExist(registerRequest.getCaptcha(), registerRequest.getCaptcha_secret())) {

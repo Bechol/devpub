@@ -52,7 +52,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * @return Page<Post>.
      */
     Page<Post> findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
-            ModerationStatus moderationStatus, LocalDateTime time, String query, Pageable pageable);
+            String moderationStatus, LocalDateTime time, String query, Pageable pageable);
 
     /**
      * Метод findByDate.
@@ -98,7 +98,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * @param moderationStatus - статус поста.
      * @return List<Post>
      */
-    Page<Post> findByModerationStatusAndActiveTrue(ModerationStatus moderationStatus, Pageable pageable);
+    Page<Post> findByModerationStatusAndActiveTrue(String moderationStatus, Pageable pageable);
 
     /**
      * Метод findByModerationStatusAndActiveTrue.
@@ -108,7 +108,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * @param moderator        - авторизованный модератор.
      * @return List<Post>
      */
-    Page<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, ModerationStatus moderationStatus,
+    Page<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, String moderationStatus,
                                                                  Pageable pageable);
 
     /**

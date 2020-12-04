@@ -25,6 +25,7 @@ import ru.bechol.devpub.response.PostResponse;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.enums.ModerationStatus;
 import ru.bechol.devpub.service.enums.PostStatus;
+import ru.bechol.devpub.service.enums.SettingValue;
 import ru.bechol.devpub.service.enums.SortMode;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 import ru.bechol.devpub.service.exception.ModerationStatusNotFoundException;
@@ -137,7 +138,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository
                 .findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
-                        ModerationStatus.ACCEPTED, LocalDateTime.now(), query, pageable);
+                        ModerationStatus.ACCEPTED.toString(), LocalDateTime.now(), query, pageable);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(
                 postPages.getContent(), true, false, false
         );
@@ -265,11 +266,11 @@ public class PostService {
      * @return ModerationStatus.NEW - если установлен режим премодерации.
      * @throws CodeNotFoundException - если настрока не найдена по коду.
      */
-    private ModerationStatus acceptModerationStatus() throws CodeNotFoundException {
-        if (globalSettingsService.checkSetting("POST_PREMODERATION", GlobalSetting.SettingValue.YES)) {
-            return ModerationStatus.NEW;
+    private String acceptModerationStatus() throws CodeNotFoundException {
+        if (globalSettingsService.checkSetting("POST_PREMODERATION", SettingValue.YES)) {
+            return ModerationStatus.NEW.toString();
         } else {
-            return ModerationStatus.ACCEPTED;
+            return ModerationStatus.ACCEPTED.toString();
         }
     }
 
@@ -333,15 +334,15 @@ public class PostService {
         switch (moderationStatus) {
             case ACCEPTED:
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
-                        ModerationStatus.ACCEPTED, pageable);
+                        ModerationStatus.ACCEPTED.toString(), pageable);
                 break;
             case DECLINED:
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
-                        ModerationStatus.DECLINED, pageable);
+                        ModerationStatus.DECLINED.toString(), pageable);
                 break;
             default:
                 queryListResult = postRepository.
-                        findByModerationStatusAndActiveTrue(ModerationStatus.NEW, pageable);
+                        findByModerationStatusAndActiveTrue(ModerationStatus.NEW.toString(), pageable);
         }
         List<PostDto> resultList = postMapperHelper.mapPostList(queryListResult.getContent(),
                 true, false, false);
@@ -371,7 +372,7 @@ public class PostService {
         post.setTime(this.preparePostCreationTime(editPostRequest.getTimestamp()));
         post.setTags(tagService.mapTags(editPostRequest.getTags()));
         if (!activeUser.isModerator()) {
-            post.setModerationStatus(ModerationStatus.NEW);
+            post.setModerationStatus(ModerationStatus.NEW.toString());
         }
         postRepository.save(post);
         return ResponseEntity.ok(Response.builder().result(true).build());
@@ -390,9 +391,9 @@ public class PostService {
         User activeUser = userService.findByEmail(principal.getName());
         Post post = this.findById(moderationRequest.getPostId());
         if (moderationRequest.getDecision().equals("accept")) {
-            post.setModerationStatus(ModerationStatus.ACCEPTED);
+            post.setModerationStatus(ModerationStatus.ACCEPTED.toString());
         } else {
-            post.setModerationStatus(ModerationStatus.DECLINED);
+            post.setModerationStatus(ModerationStatus.DECLINED.toString());
         }
         post.setModeratedBy(activeUser);
         postRepository.save(post);
@@ -449,7 +450,7 @@ public class PostService {
      */
     public long findPostsByStatus(ModerationStatus moderationStatus) {
         List<Post> newPosts = postRepository
-                .findByModerationStatusAndActiveTrue(moderationStatus, null).getContent();
+                .findByModerationStatusAndActiveTrue(moderationStatus.toString(), null).getContent();
         return !newPosts.isEmpty() ? newPosts.size() : 0;
     }
 
