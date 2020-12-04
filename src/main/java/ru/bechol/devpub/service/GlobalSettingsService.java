@@ -49,8 +49,7 @@ public class GlobalSettingsService {
     public ResponseEntity<Map<String, Boolean>> createGeneralSettingsMap() {
         Map<String, Boolean> settingsMap = globalSettingRepository.findAll().stream()
                 .collect(Collectors.toMap(GlobalSetting::getCode,
-                        value -> value.toString().equals(SettingValue.YES.toString()))
-                );
+                        value -> value.getValue().equals(SettingValue.YES.name())));
         return ResponseEntity.ok(settingsMap);
     }
 
