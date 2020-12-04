@@ -102,10 +102,10 @@ public class PostService {
      * @param sortMode -  режим вывода (сортировка).
      * @return - ResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) throws ModerationStatusNotFoundException {
+    public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByModerationStatusAndActiveTrueAndTimeBefore(
-                ModerationStatus.fromValue("accepted"), LocalDateTime.now(), pageable);
+                ModerationStatus.ACCEPTED.name(), LocalDateTime.now(), pageable);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(postPages.getContent(),
                 true, false, false);
         switch (sortMode) {

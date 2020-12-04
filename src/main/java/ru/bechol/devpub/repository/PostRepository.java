@@ -36,7 +36,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
      * @return Page<Post>.
      * @see ru.bechol.devpub.service.PostService
      */
-    Page<Post> findByModerationStatusAndActiveTrueAndTimeBefore(ModerationStatus moderationStatus,
+    Page<Post> findByModerationStatusAndActiveTrueAndTimeBefore(String moderationStatus,
                                                                 LocalDateTime time, Pageable pageable);
 
     /**
