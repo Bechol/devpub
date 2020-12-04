@@ -26,7 +26,6 @@ import ru.bechol.devpub.request.RegisterRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.StatisticResponse;
 import ru.bechol.devpub.response.UserData;
-import ru.bechol.devpub.service.enums.ModerationStatus;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 import ru.bechol.devpub.service.exception.UserNotFoundException;
 
@@ -178,7 +177,7 @@ public class UserService implements UserDetailsService {
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())
                         .photo(authorizedUser.getPhotoLink())
-                        .moderationCount(postService.findPostsByStatus(ModerationStatus.NEW))
+                        .moderationCount(postService.findPostsByStatus(Post.ModerationStatus.NEW))
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
     }

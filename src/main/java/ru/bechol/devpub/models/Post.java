@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.bechol.devpub.service.enums.ModerationStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -68,4 +67,10 @@ public class Post {
             joinColumns = {@JoinColumn(name = "post_id")},
             inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private List<Tag> tags;
+
+
+    public enum ModerationStatus {
+
+        NEW, ACCEPTED, DECLINED
+    }
 }

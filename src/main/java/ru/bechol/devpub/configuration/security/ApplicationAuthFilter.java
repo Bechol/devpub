@@ -11,11 +11,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.UserData;
 import ru.bechol.devpub.service.PostService;
-import ru.bechol.devpub.service.enums.ModerationStatus;
+
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -75,7 +76,7 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
                         .photo(user.getPhotoLink())
                         .email(user.getEmail())
                         .moderation(user.isModerator())
-                        .moderationCount(user.isModerator() ? postService.findPostsByStatus(ModerationStatus.NEW) : 0)
+                        .moderationCount(user.isModerator() ? postService.findPostsByStatus(Post.ModerationStatus.NEW) : 0)
                         .settings(user.isModerator()).build()).build();
     }
 
