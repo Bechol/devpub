@@ -326,12 +326,12 @@ public class PostService {
      * @param moderationStatus - статус модерации.
      * @return PostResponse.
      */
-    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit,
-                                              ModerationStatus moderationStatus) {
+    public PostResponse findPostsOnModeration(Principal principal, int offset, int limit, String status)
+            throws ModerationStatusNotFoundException {
         User moderator = userService.findByEmail(principal.getName());
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");
         Page<Post> queryListResult;
-        switch (moderationStatus) {
+        switch (ModerationStatus.fromValue(status)) {
             case ACCEPTED:
                 queryListResult = postRepository.findByModeratedByAndModerationStatusAndActiveTrue(moderator,
                         ModerationStatus.ACCEPTED.toString(), pageable);
