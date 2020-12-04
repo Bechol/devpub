@@ -15,7 +15,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.bechol.devpub.event.DevpubAppEvent;
-import ru.bechol.devpub.models.GlobalSetting;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.Vote;

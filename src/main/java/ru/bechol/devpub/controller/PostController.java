@@ -5,13 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.request.PostIdRequest;
 import ru.bechol.devpub.request.PostRequest;
 import ru.bechol.devpub.response.PostDto;
 import ru.bechol.devpub.response.PostResponse;
 import ru.bechol.devpub.service.PostService;
 import ru.bechol.devpub.service.VoteService;
-import ru.bechol.devpub.service.enums.ModerationStatus;
+
 import ru.bechol.devpub.service.enums.PostStatus;
 import ru.bechol.devpub.service.enums.SortMode;
 import ru.bechol.devpub.service.exception.*;
@@ -195,7 +196,7 @@ public class PostController {
     public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
                                           @RequestParam String status, Principal principal)
             throws ModerationStatusNotFoundException {
-        return postService.findPostsOnModeration(principal, offset, limit, ModerationStatus.fromValue(status));
+        return postService.findPostsOnModeration(principal, offset, limit, status);
     }
 
     /**

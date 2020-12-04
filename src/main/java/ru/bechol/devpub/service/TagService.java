@@ -11,7 +11,7 @@ import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.TagRepository;
 import ru.bechol.devpub.response.TagResponse;
 import ru.bechol.devpub.service.aspect.Trace;
-import ru.bechol.devpub.service.enums.ModerationStatus;
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class TagService {
      * @return true - если не соблюдены все условия проверки.
      */
     private boolean checkPost(Post post) {
-        return !(post.isActive() && post.getModerationStatus().equals(ModerationStatus.ACCEPTED) &&
+        return !(post.isActive() && post.getModerationStatus().equals("ACCEPTED") &&
                 post.getTime().isBefore(LocalDateTime.now()));
     }
 }

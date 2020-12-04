@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
-import ru.bechol.devpub.service.enums.ModerationStatus;
+
 
 import javax.persistence.Tuple;
 import java.time.LocalDateTime;
