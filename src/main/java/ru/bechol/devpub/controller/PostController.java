@@ -52,7 +52,7 @@ public class PostController {
     @GetMapping
     public ResponseEntity<PostResponse> getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
                                                           @RequestParam(defaultValue = "20") int limit,
-                                                          @RequestParam String mode) throws SortModeNotFoundException {
+                                                          @RequestParam String mode) throws EnumValueNotFoundException {
         return postService.findAllPostsSorted(offset, limit, SortMode.fromValue(mode));
     }
 
@@ -122,7 +122,7 @@ public class PostController {
     @GetMapping("/my")
     @ResponseStatus(HttpStatus.OK)
     public PostResponse findActiveUserPosts(Principal user, @RequestParam int offset, @RequestParam int limit,
-                                            @RequestParam String status) throws PostStatusNotFoundException {
+                                            @RequestParam String status) throws EnumValueNotFoundException {
         return postService.findActiveUserPosts(user, offset, limit, PostStatus.fromValue(status));
     }
 
@@ -195,7 +195,7 @@ public class PostController {
     @GetMapping("/moderation")
     public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
                                           @RequestParam String status, Principal principal)
-            throws ModerationStatusNotFoundException {
+            throws EnumValueNotFoundException {
         return postService.findPostsOnModeration(principal, offset, limit, status);
     }
 

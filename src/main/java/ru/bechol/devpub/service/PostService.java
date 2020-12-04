@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import ru.bechol.devpub.event.DevpubAppEvent;
-import ru.bechol.devpub.models.GlobalSetting;
 import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.Role;
@@ -28,7 +27,7 @@ import ru.bechol.devpub.service.enums.PostStatus;
 import ru.bechol.devpub.service.enums.SettingValue;
 import ru.bechol.devpub.service.enums.SortMode;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
-import ru.bechol.devpub.service.exception.ModerationStatusNotFoundException;
+import ru.bechol.devpub.service.exception.EnumValueNotFoundException;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
 import ru.bechol.devpub.service.helper.PostMapperHelper;
 
@@ -138,7 +137,7 @@ public class PostService {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository
                 .findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
-                        ModerationStatus.ACCEPTED.toString(), LocalDateTime.now(), query, pageable);
+                        ModerationStatus.ACCEPTED.name(), LocalDateTime.now(), query, pageable);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(
                 postPages.getContent(), true, false, false
         );
@@ -327,7 +326,7 @@ public class PostService {
      * @return PostResponse.
      */
     public PostResponse findPostsOnModeration(Principal principal, int offset, int limit, String status)
-            throws ModerationStatusNotFoundException {
+            throws EnumValueNotFoundException {
         User moderator = userService.findByEmail(principal.getName());
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");
         Page<Post> queryListResult;
@@ -450,7 +449,7 @@ public class PostService {
      */
     public long findPostsByStatus(ModerationStatus moderationStatus) {
         List<Post> newPosts = postRepository
-                .findByModerationStatusAndActiveTrue(moderationStatus.toString(), null).getContent();
+                .findByModerationStatusAndActiveTrue(moderationStatus.name(), null).getContent();
         return !newPosts.isEmpty() ? newPosts.size() : 0;
     }
 

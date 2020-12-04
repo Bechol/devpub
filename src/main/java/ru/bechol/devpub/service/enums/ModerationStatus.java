@@ -1,8 +1,7 @@
 package ru.bechol.devpub.service.enums;
 
 import ru.bechol.devpub.service.PostService;
-import ru.bechol.devpub.service.exception.ModerationStatusNotFoundException;
-import ru.bechol.devpub.service.exception.PostStatusNotFoundException;
+import ru.bechol.devpub.service.exception.EnumValueNotFoundException;
 
 import java.util.stream.Stream;
 
@@ -33,13 +32,13 @@ public enum ModerationStatus {
      *
      * @param requestModerationStatusValue - значение для поиска.
      * @return - значение enum.
-     * @throws PostStatusNotFoundException - если искомое значение enum не существует.
+     * @throws EnumValueNotFoundException - если искомое значение enum не существует.
      */
     public static ModerationStatus fromValue(String requestModerationStatusValue)
-            throws ModerationStatusNotFoundException {
+            throws EnumValueNotFoundException {
         return Stream.of(values())
                 .filter(postStatus -> postStatus.value.equals(requestModerationStatusValue)).findAny()
-                .orElseThrow(() -> new ModerationStatusNotFoundException(
-                        String.format("Moderation status [%s] is not present", requestModerationStatusValue)));
+                .orElseThrow(() -> new EnumValueNotFoundException(
+                        String.format("Enum value [%s] is not present", requestModerationStatusValue)));
     }
 }

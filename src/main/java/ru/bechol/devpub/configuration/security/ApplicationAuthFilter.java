@@ -11,7 +11,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.UserData;

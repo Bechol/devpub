@@ -13,6 +13,7 @@ import ru.bechol.devpub.service.Messages;
 import ru.bechol.devpub.service.exception.*;
 
 import javax.management.relation.RoleNotFoundException;
+import java.nio.file.InvalidPathException;
 
 /**
  * Класс GlobalControllerExceptionHandler.
@@ -55,32 +56,6 @@ public class GlobalControllerExceptionHandler {
     }
 
     /**
-     * Метод handleSortModeException.
-     * Обработка исключения SortModeNotFoundException.
-     *
-     * @param exception - SortModeNotFoundException.
-     * @return - ResponseEntity<ErrorResponse>.
-     */
-    @ExceptionHandler(SortModeNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleSortModeException(SortModeNotFoundException exception) {
-        return this.createErrorResponse("warning.required-not-present",
-                "", "request parameter", "mode");
-    }
-
-    /**
-     * Метод handlePostStatusException.
-     * Обработка исключения PostStatusNotFoundException.
-     *
-     * @param exception - PostStatusNotFoundException.
-     * @return - ResponseEntity<ErrorResponse>.
-     */
-    @ExceptionHandler(PostStatusNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handlePostStatusException(PostStatusNotFoundException exception) {
-        return this.createErrorResponse("warning.required-not-present",
-                "", "request parameter", "post status");
-    }
-
-    /**
      * Метод handleUsernameNotFoundException.
      * Обработка исключения UserNotFoundException.
      *
@@ -118,15 +93,27 @@ public class GlobalControllerExceptionHandler {
     }
 
     /**
-     * Метод handleGlobalSetting.
+     * Метод handleCodeNotFoundException.
      * Обработка исключения CodeNotFoundException.
      *
      * @param exception - CodeNotFoundException.
      * @return - ResponseEntity<ErrorResponse>.
      */
     @ExceptionHandler(CodeNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleGlobalSetting(CodeNotFoundException exception) {
+    public ResponseEntity<ErrorResponse> handleCodeNotFoundException(CodeNotFoundException exception) {
         return this.createErrorResponse("warning.not-found-by", "global setting", "code", null);
+    }
+
+    /**
+     * Метод handleInvalidPathException.
+     * Обработка исключения InvalidPathException.
+     *
+     * @param exception - CodeNotFoundException.
+     * @return - ResponseEntity<ErrorResponse>.
+     */
+    @ExceptionHandler(InvalidPathException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPathException(InvalidPathException exception) {
+        return this.createErrorResponse("bad.file-patch");
     }
 
     /**

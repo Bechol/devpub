@@ -1,7 +1,7 @@
 package ru.bechol.devpub.service.enums;
 
 import ru.bechol.devpub.service.PostService;
-import ru.bechol.devpub.service.exception.PostStatusNotFoundException;
+import ru.bechol.devpub.service.exception.EnumValueNotFoundException;
 
 import java.util.stream.Stream;
 
@@ -35,12 +35,12 @@ public enum PostStatus {
      *
      * @param requestPostStatusValue - значение для поиска.
      * @return - значение enum.
-     * @throws PostStatusNotFoundException - если искомое значение enum не существует.
+     * @throws EnumValueNotFoundException - если искомое значение enum не существует.
      */
-    public static PostStatus fromValue(String requestPostStatusValue) throws PostStatusNotFoundException {
+    public static PostStatus fromValue(String requestPostStatusValue) throws EnumValueNotFoundException {
         return Stream.of(values())
                 .filter(postStatus -> postStatus.value.equals(requestPostStatusValue)).findAny()
-                .orElseThrow(() -> new PostStatusNotFoundException(
-                        String.format("Post status [%s] is not present", requestPostStatusValue)));
+                .orElseThrow(() -> new EnumValueNotFoundException(
+                        String.format("Enum value [%s] is not present", requestPostStatusValue)));
     }
 }

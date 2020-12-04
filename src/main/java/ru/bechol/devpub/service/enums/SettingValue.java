@@ -1,7 +1,7 @@
 package ru.bechol.devpub.service.enums;
 
 import ru.bechol.devpub.service.PostService;
-import ru.bechol.devpub.service.exception.SortModeNotFoundException;
+import ru.bechol.devpub.service.exception.EnumValueNotFoundException;
 
 import java.util.stream.Stream;
 
@@ -31,12 +31,12 @@ public enum SettingValue {
      *
      * @param requestModeValue - значение для поиска.
      * @return - значение enum.
-     * @throws SortModeNotFoundException - если искомое значение enum не существует.
+     * @throws EnumValueNotFoundException - если искомое значение enum не существует.
      */
-    public static SettingValue fromValue(String requestModeValue) throws SortModeNotFoundException {
+    public static SettingValue fromValue(String requestModeValue) throws EnumValueNotFoundException {
         return Stream.of(values())
                 .filter(sortMode -> sortMode.value.equals(requestModeValue)).findAny()
-                .orElseThrow(() -> new SortModeNotFoundException(
-                        String.format("Sort mode [%s] is not present", requestModeValue)));
+                .orElseThrow(() -> new EnumValueNotFoundException(
+                        String.format("Enum value [%s] is not present", requestModeValue)));
     }
 }
