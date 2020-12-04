@@ -51,7 +51,7 @@ public class PostController {
     @GetMapping
     public ResponseEntity<PostResponse> getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
                                                           @RequestParam(defaultValue = "20") int limit,
-                                                          @RequestParam String mode) throws SortModeNotFoundException, ModerationStatusNotFoundException {
+                                                          @RequestParam String mode) throws SortModeNotFoundException {
         return postService.findAllPostsSorted(offset, limit, SortMode.fromValue(mode));
     }
 
