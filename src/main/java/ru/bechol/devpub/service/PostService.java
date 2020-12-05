@@ -222,7 +222,8 @@ public class PostService {
      */
     private List<Post> filterActivePostByModerationStatus(List<Post> postList, ModerationStatus moderationStatus) {
         return postList.stream().filter(post ->
-                post.isActive() && post.getModerationStatus().equals(moderationStatus)).collect(Collectors.toList()
+                post.isActive() && post.getModerationStatus().equals(moderationStatus.name()))
+                .collect(Collectors.toList()
         );
     }
 
@@ -370,9 +371,7 @@ public class PostService {
         post.setText(editPostRequest.getText());
         post.setTime(this.preparePostCreationTime(editPostRequest.getTimestamp()));
         post.setTags(tagService.mapTags(editPostRequest.getTags()));
-        if (!activeUser.isModerator()) {
-            post.setModerationStatus(ModerationStatus.NEW.toString());
-        }
+        post.setModerationStatus(ModerationStatus.NEW.toString());
         postRepository.save(post);
         return ResponseEntity.ok(Response.builder().result(true).build());
     }
