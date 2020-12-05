@@ -138,9 +138,8 @@ public class PostController {
      * @return ResponseEntity<PostsResponse>.
      */
     @PostMapping
-    public ResponseEntity<?> createNewPost(@Valid @RequestBody PostRequest postRequest,
-                                           BindingResult bindingResult, Principal principal)
-            throws RoleNotFoundException, CodeNotFoundException {
+    public ResponseEntity<?> createNewPost(@Valid @RequestBody PostRequest postRequest, BindingResult bindingResult,
+                                           Principal principal) throws Exception {
         return postService.createNewPost(principal, postRequest, bindingResult);
     }
 

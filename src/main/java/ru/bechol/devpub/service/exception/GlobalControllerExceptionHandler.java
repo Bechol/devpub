@@ -116,6 +116,11 @@ public class GlobalControllerExceptionHandler {
         return this.createErrorResponse("bad.file-patch");
     }
 
+    @ExceptionHandler(ModeratorNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleModeratorNotFoundException(ModeratorNotFoundException exception) {
+        return this.createErrorResponse("warning.not-found", "moderator");
+    }
+
     /**
      * Метод createErrorResponse.
      * Запись в лог о возникшем исключении и создание ответа на запрос.

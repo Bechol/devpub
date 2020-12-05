@@ -10,6 +10,7 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.CaptchaCodesRepository;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.repository.UserRepository;
+import ru.bechol.devpub.service.EmailService;
 import ru.bechol.devpub.service.Messages;
 
 import javax.mail.internet.MimeMessage;
@@ -39,6 +40,9 @@ public class AppEventHandler {
     private PostRepository postRepository;
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private EmailService emailService;
+
 
     /**
      * Метод handle.
@@ -87,12 +91,19 @@ public class AppEventHandler {
     /**
      * Метод handleSavePost.
      * Сохранение поста в базу данных.
-     *
+     * Отправка письма модератору.
      * @param devpubAppEvent - событие сохранения сохранения поста.
      */
     private void handleSavePost(DevpubAppEvent<Post> devpubAppEvent) {
         log.info("handle {}", devpubAppEvent.toString());
+        String moderatorName = devpubAppEvent.getEventObject().getModerator().getName();
         postRepository.save(devpubAppEvent.getEventObject());
+        if(devpubAppEvent.getEventObject().isActive()) {
+            emailService.send(devpubAppEvent.getEventObject().getModerator().getEmail(),
+                    messages.getMessage("post.moderation-mail-subject"),
+                    messages.getMessage("post.moderation-mail", moderatorName)
+            );
+        }
     }
 
     /**

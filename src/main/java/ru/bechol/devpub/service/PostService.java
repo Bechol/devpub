@@ -29,6 +29,7 @@ import ru.bechol.devpub.service.enums.SortMode;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 import ru.bechol.devpub.service.exception.EnumValueNotFoundException;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
+import ru.bechol.devpub.service.helper.ModeratorLoadBalancer;
 import ru.bechol.devpub.service.helper.PostMapperHelper;
 
 import javax.management.relation.RoleNotFoundException;
@@ -77,6 +78,8 @@ public class PostService {
     private GlobalSettingsService globalSettingsService;
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+    @Autowired
+    private ModeratorLoadBalancer moderatorLoadBalancer;
 
 
     /**
@@ -237,11 +240,10 @@ public class PostService {
      * @return - ResponseEntity<Response<?>>.
      */
     public ResponseEntity<?> createNewPost(Principal principal, PostRequest postRequest, BindingResult bindingResult)
-            throws RoleNotFoundException, CodeNotFoundException {
+            throws Exception {
         if (bindingResult.hasErrors()) {
             return createBindingErrorResponse(bindingResult, HttpStatus.OK);
         }
-        Role roleModerator = roleService.findByName("ROLE_MODERATOR");
         Post newPost = new Post();
         newPost.setTime(this.preparePostCreationTime(postRequest.getTimestamp()));
         newPost.setActive(postRequest.isActive());
@@ -249,7 +251,7 @@ public class PostService {
         newPost.setText(postRequest.getText());
         newPost.setModerationStatus(this.acceptModerationStatus());
         newPost.setUser(userService.findByEmail(principal.getName()));
-        newPost.setModerator(roleModerator.getUsers().stream().findFirst().orElse(null));
+        newPost.setModerator(moderatorLoadBalancer.appointModerator());
         if (postRequest.getTags().size() > 0) {
             newPost.setTags(tagService.mapTags(postRequest.getTags()));
         }
