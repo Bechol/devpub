@@ -11,13 +11,13 @@ import ru.bechol.devpub.models.Comment;
 import ru.bechol.devpub.repository.CommentRepository;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.request.CommentRequest;
-import ru.bechol.devpub.response.CommentResponse;
 import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
 
 import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
 
 import java.security.Principal;
+import java.util.Map;
 
 /**
  * Класс CommentService.
@@ -68,6 +68,6 @@ public class CommentService {
             newPostComment.setParent(commentRepository.findById(Long.valueOf(parentId)).orElse(null));
         }
         newPostComment.setText(commentRequest.getText());
-        return ResponseEntity.ok(CommentResponse.builder().id(commentRepository.save(newPostComment).getId()).build());
+        return ResponseEntity.ok(Map.of("id", commentRepository.save(newPostComment).getId()));
     }
 }

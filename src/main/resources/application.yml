@@ -31,10 +31,10 @@ flyway:
 default:
   title: DevPub
   subtitle: Рассказы разработчиков
-  phone: +7 903 666-44-55
-  email: mail@mail.ru
-  copyright: Дмитрий Сергеев
-  copyrightFrom: 2005
+  phone: +7 903 254-44-16
+  email: oleg071984@gmail.com
+  copyright: AllCoders Inc.
+  copyrightFrom: 2020
 
 #Cloudinary
 cloudinary:
@@ -69,3 +69,9 @@ storage:
   image:
     allowed-formats: jpg, png
 
+#Swagger OpenAPI docs
+springdoc:
+  api-docs:
+    path: /api-json
+  swagger-ui:
+    path: /api-view

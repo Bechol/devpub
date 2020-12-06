@@ -59,13 +59,13 @@ public class CaptchaCodesService {
      * @return ResponseEntity<CaptchaResponse>
      * @throws IOException
      */
-    public ResponseEntity<?> generateCaptcha() throws IOException {
+    public CaptchaResponse generateCaptcha() throws IOException {
         CaptchaResponse captchaResponse = createResponse();
         this.saveCaptchaInfo(captchaResponse);
         applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
                 this, LocalDateTime.now().minusHours(storageLimit), DevpubAppEvent.EventType.DELETE_CAPTCHA
         ));
-        return ResponseEntity.ok(captchaResponse);
+        return captchaResponse;
     }
 
     /**

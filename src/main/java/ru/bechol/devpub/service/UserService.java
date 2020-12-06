@@ -84,7 +84,7 @@ public class UserService implements UserDetailsService {
      * @return ResponseEntity<?>.
      */
     public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult)
-            throws RoleNotFoundException, CodeNotFoundException {
+            throws Exception {
         if(globalSettingsService.checkSetting("MULTIUSER_MODE", SettingValue.NO)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messages.getMessage("multi-user.off"));
         }
@@ -249,7 +249,7 @@ public class UserService implements UserDetailsService {
         applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
                 this, user, DevpubAppEvent.EventType.SAVE_USER
         ));
-        return ResponseEntity.ok().body(Response.builder().result(true).build());
+        return ResponseEntity.ok().body(Map.of("result", true));
     }
 
     /**
@@ -269,7 +269,11 @@ public class UserService implements UserDetailsService {
      *
      * @return ResponseEntity<?>
      */
-    public ResponseEntity<?> calculateSiteStatistics() {
+    public ResponseEntity<?> calculateSiteStatistics(Principal principal) throws CodeNotFoundException {
+        if (globalSettingsService.checkSetting("STATISTICS_IS_PUBLIC", SettingValue.NO)
+        && !this.findByEmail(principal.getName()).isModerator()) {
+            return ResponseEntity.status(401).build();
+        }
         return ResponseEntity.ok(this.createStatisticsResponse(null));
     }
 

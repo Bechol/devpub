@@ -1,15 +1,25 @@
 package ru.bechol.devpub.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.request.PostIdRequest;
 import ru.bechol.devpub.request.PostRequest;
 import ru.bechol.devpub.response.PostDto;
 import ru.bechol.devpub.response.PostResponse;
+import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.PostService;
 import ru.bechol.devpub.service.VoteService;
 
@@ -17,7 +27,6 @@ import ru.bechol.devpub.service.enums.PostStatus;
 import ru.bechol.devpub.service.enums.SortMode;
 import ru.bechol.devpub.service.exception.*;
 
-import javax.management.relation.RoleNotFoundException;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.Map;
@@ -29,6 +38,7 @@ import java.util.Map;
  * @author Oleg Bech
  * @version 1.0
  */
+@Tag(name = "/api/post", description = "Работа с постами")
 @RestController
 @RequestMapping("/api/post")
 public class PostController {
@@ -49,10 +59,24 @@ public class PostController {
      * @param mode   -  режим вывода (сортировка).
      * @return ResponseEntity<PostsResponse>.
      */
-    @GetMapping
-    public ResponseEntity<PostResponse> getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
-                                                          @RequestParam(defaultValue = "20") int limit,
-                                                          @RequestParam String mode) throws EnumValueNotFoundException {
+    @Operation(summary = "Получение постов со всей сопутствующей информацией для главной страницы и подразделов " +
+            "\"Новые\", \"Самые обсуждаемые\", \"Лучшие\" и \"Старые\". ", description = "Метод выводит посты, " +
+            "отсортированные в соответствии с параметром mode. Выводятся только активные" +
+            " (поле is_active в таблице posts равно 1), утверждённые модератором (поле moderation_status " +
+            "равно ACCEPTED) посты с датой публикации не позднее текущего момента.")
+    @ApiResponses(value = {
+            @ApiResponse(description = "Посты найдены", responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = PostResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Не указаны требуемые параметры запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostResponse getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
+                                          @RequestParam(defaultValue = "20") int limit,
+                                          @RequestParam String mode) throws EnumValueNotFoundException {
         return postService.findAllPostsSorted(offset, limit, SortMode.fromValue(mode));
     }
 
@@ -67,10 +91,21 @@ public class PostController {
      * @param query  -  поисковый запрос.
      * @return ResponseEntity<PostsResponse>.
      */
-    @GetMapping("/search")
-    public ResponseEntity<PostResponse> findPostsByTextContainingQuery(@RequestParam(defaultValue = "0") int offset,
-                                                                       @RequestParam(defaultValue = "20") int limit,
-                                                                       @RequestParam String query) {
+    @Operation(summary = "Возвращает посты, соответствующие поисковому запросу - строке query." +
+            " В случае, если запрос пустой, метод должен выводить все посты.", description = "Выводятся только активные" +
+            " (поле is_active в таблице posts равно 1), утверждённые модератором (поле moderation_status " +
+            "равно ACCEPTED) посты с датой публикации не позднее текущего момента.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PostResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Не указаны требуемые параметры запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+    })
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostResponse findPostsByTextContainingQuery(@RequestParam(defaultValue = "0") int offset,
+                                                       @RequestParam(defaultValue = "20") int limit,
+                                                       @RequestParam String query) {
         return postService.findPostsByTextContainingQuery(offset, limit, query);
     }
 
@@ -84,10 +119,20 @@ public class PostController {
      * @param date   -  дата в формате "YYYY-MM-dd"
      * @return ResponseEntity<PostsResponse>.
      */
-    @GetMapping("/byDate")
-    public ResponseEntity<PostResponse> findPostsByDate(@RequestParam(defaultValue = "0") int offset,
-                                                        @RequestParam(defaultValue = "20") int limit,
-                                                        @RequestParam String date) {
+    @Operation(summary = "Посты за указанную дату", description = "Выводятся только активные (поле is_active в таблице " +
+            "posts равно 1), утверждённые модератором (поле moderation_status равно ACCEPTED) посты с датой публикации " +
+            "не позднее текущего момента.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PostResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Не указаны требуемые параметры запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+    })
+    @GetMapping(value = "/byDate", produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostResponse findPostsByDate(@RequestParam(defaultValue = "0") int offset,
+                                        @RequestParam(defaultValue = "20") int limit,
+                                        @Parameter(description = "дата в формате \"YYYY-MM-dd\"") @RequestParam String date) {
         return postService.findPostsByDate(offset, limit, date);
     }
 
@@ -101,10 +146,20 @@ public class PostController {
      * @param tag    -  тег, к которому привязан пост.
      * @return ResponseEntity<PostsResponse>.
      */
-    @GetMapping("/byTag")
-    public ResponseEntity<PostResponse> findByTag(@RequestParam(defaultValue = "0") int offset,
-                                                  @RequestParam(defaultValue = "20") int limit,
-                                                  @RequestParam String tag) {
+    @Operation(summary = "Посты по тегу", description = "Выводятся только активные (поле is_active в таблице " +
+            "posts равно 1), утверждённые модератором (поле moderation_status равно ACCEPTED) посты с датой публикации " +
+            "не позднее текущего момента.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PostResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Не указаны требуемые параметры запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+    })
+    @GetMapping(value = "/byTag", produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostResponse findByTag(@RequestParam(defaultValue = "0") int offset,
+                                  @RequestParam(defaultValue = "20") int limit,
+                                  @RequestParam String tag) {
         return postService.findByTag(offset, limit, tag);
     }
 
@@ -119,25 +174,59 @@ public class PostController {
      * @param status -  статус модерации.
      * @return ResponseEntity<PostsResponse>.
      */
-    @GetMapping("/my")
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponse findActiveUserPosts(Principal user, @RequestParam int offset, @RequestParam int limit,
+    @Operation(summary = "Посты, которые создал авторизованный пользователь")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PostResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Не указаны требуемые параметры запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @GetMapping(value = "/my", produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostResponse findActiveUserPosts(Principal user, @RequestParam(defaultValue = "0") int offset,
+                                            @RequestParam(defaultValue = "0") int limit,
                                             @RequestParam String status) throws EnumValueNotFoundException {
         return postService.findActiveUserPosts(user, offset, limit, PostStatus.fromValue(status));
     }
 
     /**
      * Метод createNewPost.
-     * GET запрос /api/post/my.
-     * Метод выводит только те посты, которые создал я (в соответствии с полем user_id в таблице posts базы данных).
-     * Возможны 4 типа вывода (см. ниже описания значений параметра status).
-     *
+     * POST запрос /api/post.
+     * Метод отправляет данные поста, которые пользователь ввёл в форму публикации. В случае, если заголовок или
+     * текст поста не установлены и/или слишком короткие (короче 3 и 50 символов соответственно), метод должен
+     * выводить ошибку и не добавлять пост.
+     * Время публикации поста также должно проверяться: в случае, если время публикации раньше текущего времени,
+     * оно должно автоматически становиться текущим. Если позже текущего - необходимо устанавливать введенное значение.
+     * Пост должен сохраняться со статусом модерации NEW.
      * @param postRequest   - json для создания поста.
      * @param bindingResult - результат валидации данных нового поста.
      * @param principal     - авторизованный пользователь.
      * @return ResponseEntity<PostsResponse>.
      */
-    @PostMapping
+    @Operation(summary = "Создание нового поста", description = "В случае, если заголовок или текст поста не установлены " +
+            "и/или слишком короткие (короче 3 и 50 символов соответственно), метод должен выводить ошибку " +
+            "и не добавлять пост. Время публикации поста также должно проверяться: в случае, если время публикации " +
+            "раньше текущего времени, оно должно автоматически становиться текущим. Если позже текущего - необходимо " +
+            "устанавливать введенное значение. Пост должен сохраняться со статусом модерации NEW.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Новый пост сохранен",
+                    content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = {
+                            @ExampleObject(name = "ok", description = "пост успешно сохранен",
+                                    value = "{\n\t\"result\": true\n}"),
+                            @ExampleObject(name = "errors", description = "Значения полей пользовательской формы не прошли валидацию",
+                                    value = "{\n\t\"result\": false,\n\t\"errors\": {\n" +
+                                    "\t\t\"title\": \"Заголовок не установлен\"," +
+                                    "\t\t\"text\": \"Текст публикации слишком короткий\"\n}\n}")
+                    })
+            }),
+            @ApiResponse(responseCode = "400", description = "Не указаны требуемые параметры запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createNewPost(@Valid @RequestBody PostRequest postRequest, BindingResult bindingResult,
                                            Principal principal) throws Exception {
         return postService.createNewPost(principal, postRequest, bindingResult);
@@ -155,9 +244,22 @@ public class PostController {
      * @param principal - авторизованный пользователь.
      * @return ResponseEntity<Response>.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<PostDto> showPost(@PathVariable(name = "id") long postId, Principal principal)
-            throws PostNotFoundException {
+    @Operation(summary = "Данные конкретного поста", description = "Метод выводит данные конкретного поста для " +
+            "отображения на странице поста, в том числе, список комментариев и тэгов, привязанных к данному посту. " +
+            "Выводит пост в любом случае, если пост активен (параметр is_active в базе данных равен 1), принят " +
+            "модератором (параметр moderation_status равен ACCEPTED) и время его публикации (поле timestamp) " +
+            "равно текущему времени или меньше его.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PostDto.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Пост не найден",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostDto showPost(@PathVariable(name = "id") long postId, Principal principal) throws PostNotFoundException {
         return postService.showPost(postId, principal);
     }
 
@@ -172,7 +274,30 @@ public class PostController {
      * @param principal       - авторизованный пользователь.
      * @return ResponseEntity<Response>.
      */
-    @PutMapping("/{id}")
+    @Operation(summary = "Редактирование поста", description = "Метод изменяет данные поста с идентификатором ID на те, " +
+            "которые пользователь ввёл в форму публикации. В случае, если заголовок или текст поста не установлены " +
+            "и/или слишком короткие (короче 3 и 50 символов соответственно), метод должен выводить ошибку и не изменять" +
+            " пост. Время публикации поста также должно проверяться: в случае, если время публикации раньше текущего " +
+            "времени, оно должно автоматически становиться текущим. Если позже текущего - необходимо устанавливать " +
+            "указанное значение. Пост должен сохраняться со статусом модерации NEW, если его изменил автор, и статус " +
+            "модерации не должен изменяться, если его изменил модератор.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Новый пост сохранен",
+                    content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = {
+                            @ExampleObject(name = "ok", description = "пост успешно сохранен",
+                                    value = "{\n\t\"result\": true\n}"),
+                            @ExampleObject(name = "errors", description = "Значения полей пользовательской формы не прошли валидацию",
+                                    value = "{\n\t\"result\": false,\n\t\"errors\": {\n" +
+                                            "\t\t\"title\": \"Заголовок не установлен\"," +
+                                            "\t\t\"text\": \"Текст публикации слишком короткий\"\n}\n}")
+                    })
+                    }),
+            @ApiResponse(responseCode = "400", description = "Пост не найден",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
                                       @PathVariable("id") long postId, Principal principal) throws PostNotFoundException {
         return postService.editPost(editPostRequest, postId, principal, bindingResult);
@@ -181,9 +306,10 @@ public class PostController {
 
     /**
      * Метод postsOnModeration
-     * Метод фиксирует действие модератора по посту: его утверждение или отклонение.
-     * Кроме того, фиксируется moderator_id - идентификатор пользователя, который отмодерировал пост.
      * GET запрос /api/post/moderation
+     * Метод выводит все посты, которые требуют модерационных действий (которые нужно утвердить или отклонить)
+     * или над которыми мною были совершены модерационные действия: которые я отклонил или утвердил
+     * (это определяется полями moderation_status и moderator_id в таблице posts базы данных).
      *
      * @param offset    - сдвиг от 0 для постраничного вывода.
      * @param limit     - количество постов, которое надо вывести.
@@ -191,7 +317,20 @@ public class PostController {
      * @param principal - авторизованный пользователь
      * @return - PostResponse.
      */
-    @GetMapping("/moderation")
+    @Operation(summary = "Посты, которые требуют модерационных действий", description = "Метод выводит все посты, " +
+            "которые требуют модерационных действий (которые нужно утвердить или отклонить) или над которыми мною " +
+            "были совершены модерационные действия: которые я отклонил или утвердил (это определяется полями " +
+            "moderation_status и moderator_id в таблице posts базы данных).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PostResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @GetMapping(value = "/moderation", produces = MediaType.APPLICATION_JSON_VALUE)
     public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
                                           @RequestParam String status, Principal principal)
             throws EnumValueNotFoundException {
@@ -209,8 +348,24 @@ public class PostController {
      * @param principal     - авторизованный пользователь
      * @return - Response.
      */
-    @PostMapping("/like")
-    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Лайк текущего авторизованного пользователя", description = "В случае повторного лайка " +
+            "возвращает {result: false}. Если до этого этот же пользователь поставил на этот же пост дизлайк, этот " +
+            "дизлайк должен быть заменен на лайк в базе данных.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = {
+                            @ExampleObject(name = "like", description = "лайк произошел",
+                                    value = "{\n\t\"result\": true\n}"),
+                            @ExampleObject(name = "not like", description = "лайк не произошел",
+                                    value = "{\n\t\"result\": false\n}")
+                    })
+                    }),
+            @ApiResponse(responseCode = "400", description = "Пост не найден",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @PostMapping(value = "/like", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Boolean> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
             throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, 1);
@@ -228,8 +383,24 @@ public class PostController {
      * @param principal     - авторизованный пользователь
      * @return - Response.
      */
-    @PostMapping("/dislike")
-    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Дизлайк текущего авторизованного пользователя", description = "В случае повторного дизлайка " +
+            "возвращает {result: false}. Если до этого этот же пользователь поставил на этот же пост лайк, этот " +
+            "лайк должен быть заменен на дизлайк в базе данных.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = {
+                            @ExampleObject(name = "dislike", description = "дизлайк произошел",
+                                    value = "{\n\t\"result\": true\n}"),
+                            @ExampleObject(name = "not dislike", description = "дизлайк не произошел",
+                                    value = "{\n\t\"result\": false\n}")
+                    })
+                    }),
+            @ApiResponse(responseCode = "400", description = "Пост не найден",
+                    content = {@Content(schema = @Schema(hidden = true))}),
+            @ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
+                    content = {@Content(schema = @Schema(hidden = true))})
+    })
+    @PostMapping(value = "/dislike", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Boolean> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
             throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, -1);

@@ -105,7 +105,7 @@ public class PostService {
      * @param sortMode -  режим вывода (сортировка).
      * @return - ResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostResponse> findAllPostsSorted(int offset, int limit, SortMode sortMode) {
+    public PostResponse findAllPostsSorted(int offset, int limit, SortMode sortMode) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByModerationStatusAndActiveTrueAndTimeBefore(
                 ModerationStatus.ACCEPTED.name(), LocalDateTime.now(), pageable);
@@ -124,7 +124,7 @@ public class PostService {
             default:
                 postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp).reversed());
         }
-        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
+        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
     }
 
     /**
@@ -136,7 +136,7 @@ public class PostService {
      * @param query  - поисковый запрос.
      * @return ResponseEntity<PostsResponse>
      */
-    public ResponseEntity<PostResponse> findPostsByTextContainingQuery(int offset, int limit, String query) {
+    public PostResponse findPostsByTextContainingQuery(int offset, int limit, String query) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository
                 .findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
@@ -144,7 +144,7 @@ public class PostService {
         List<PostDto> postDtoList = postMapperHelper.mapPostList(
                 postPages.getContent(), true, false, false
         );
-        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
+        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
     }
 
     /**
@@ -156,13 +156,13 @@ public class PostService {
      * @param date   - дата, за которую необходимо отобрать посты.
      * @return - фResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostResponse> findPostsByDate(int offset, int limit, String date) {
+    public PostResponse findPostsByDate(int offset, int limit, String date) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByDate(pageable, date);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(
                 postPages.getContent(), true, false, false
         );
-        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
+        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
     }
 
     /**
@@ -174,13 +174,13 @@ public class PostService {
      * @param tag    - тег, к которому привязаны посты.
      * @return - ResponseEntity<PostsResponse>.
      */
-    public ResponseEntity<PostResponse> findByTag(int offset, int limit, String tag) {
+    public PostResponse findByTag(int offset, int limit, String tag) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByTag(pageable, tag);
         List<PostDto> postDtoList = postMapperHelper.mapPostList(
                 postPages.getContent(), true, false, false
         );
-        return ResponseEntity.ok(PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build());
+        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
     }
 
     /**
@@ -284,7 +284,7 @@ public class PostService {
      * @param principal - авторизованный пользователь.
      * @return ResponseEntity<PostDto>
      */
-    public ResponseEntity<PostDto> showPost(long postId, Principal principal) throws PostNotFoundException {
+    public PostDto showPost(long postId, Principal principal) throws PostNotFoundException {
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
                 messages.getMessage("warning.not-found", "post")));
         User activeUser = null;
@@ -292,18 +292,15 @@ public class PostService {
             activeUser = userService.findByEmail(principal.getName());
         } else {
             post = increaseViewCount(post);
-            return ResponseEntity.ok().body(postMapperHelper.mapPost(post,
-                    false, true, true));
+            return postMapperHelper.mapPost(post,false, true, true);
         }
         boolean isModerator = activeUser.getRoles().stream().anyMatch(role -> role.getName().equals(ROLE_MODERATOR));
         boolean isAuthor = post.getUser().getId() == activeUser.getId();
         if (isAuthor || isModerator) {
-            return ResponseEntity.ok(postMapperHelper.mapPost(
-                    post, false, true, true));
+            return postMapperHelper.mapPost(post, false, true, true);
         }
         post = increaseViewCount(post);
-        return ResponseEntity.ok(postMapperHelper.mapPost(
-                post, false, true, true));
+        return postMapperHelper.mapPost(post, false, true, true);
     }
 
     /**
@@ -325,7 +322,7 @@ public class PostService {
      * @param principal        - авторизованный пользователь.
      * @param offset           - сдвиг от 0 для постраничного вывода
      * @param limit            - количество постов, которое надо вывести
-     * @param moderationStatus - статус модерации.
+     * @param status - статус модерации.
      * @return PostResponse.
      */
     public PostResponse findPostsOnModeration(Principal principal, int offset, int limit, String status)

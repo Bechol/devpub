@@ -84,7 +84,7 @@ public class StorageService {
         } catch (IOException | NullPointerException exception) {
             log.error(exception.getMessage());
             errorMap.put("file", exception.getMessage());
-            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
+            return ResponseEntity.badRequest().body(Response.builder().result(false).errors(errorMap).build());
         }
     }
 

@@ -1,5 +1,7 @@
 package ru.bechol.devpub.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +15,11 @@ import ru.bechol.devpub.response.ErrorResponse;
 import ru.bechol.devpub.service.enums.SettingValue;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 
+import javax.print.DocFlavor;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +33,7 @@ import java.util.stream.Collectors;
  * @see GlobalSettingRepository
  * @see DefaultController
  */
+@Slf4j
 @Service
 @Trace
 public class GlobalSettingsService {
@@ -50,6 +55,9 @@ public class GlobalSettingsService {
         Map<String, Boolean> settingsMap = globalSettingRepository.findAll().stream()
                 .collect(Collectors.toMap(GlobalSetting::getCode,
                         value -> value.getValue().equals(SettingValue.YES.name())));
+        if (settingsMap.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
         return ResponseEntity.ok(settingsMap);
     }
 
@@ -68,6 +76,9 @@ public class GlobalSettingsService {
                     messages.getMessage("er.not.moderator")).build());
         }
         List<GlobalSetting> generalSettings = globalSettingRepository.findAll();
+        if (generalSettings.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         for (int i = 0; i < generalSettings.size(); i++) {
             GlobalSetting tmpGs = generalSettings.get(i);
             if (generalSettingsMap.get(tmpGs.getCode())) {
@@ -77,7 +88,6 @@ public class GlobalSettingsService {
             }
             generalSettings.set(i, tmpGs);
         }
-        ;
         globalSettingRepository.saveAll(generalSettings);
         return ResponseEntity.ok().build();
     }
