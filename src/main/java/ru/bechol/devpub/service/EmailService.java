@@ -23,7 +23,6 @@ import javax.mail.internet.MimeMessage;
  */
 @Slf4j
 @Service
-@Trace
 public class EmailService {
 
     @Value("${mail-sender.sender-name}")
@@ -41,6 +40,7 @@ public class EmailService {
      * @param subject - тема письма.
      * @param message - текст письма.
      */
+    @Trace
     public void send(String emailTo, String subject, String message) {
         try {
             MimeMessage mailMessage = mailSender.createMimeMessage();

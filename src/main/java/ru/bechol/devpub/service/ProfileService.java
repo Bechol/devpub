@@ -11,12 +11,10 @@ import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.request.EditProfileRequest;
 import ru.bechol.devpub.response.Response;
-import ru.bechol.devpub.service.aspect.Trace;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Класс ProfileService.
@@ -26,7 +24,6 @@ import java.util.Map;
  * @email oleg071984@gmail.com
  */
 @Service
-@Trace
 public class ProfileService {
 
     @Autowired

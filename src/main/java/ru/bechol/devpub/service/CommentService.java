@@ -3,21 +3,18 @@ package ru.bechol.devpub.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import ru.bechol.devpub.models.Comment;
-import ru.bechol.devpub.repository.CommentRepository;
-import ru.bechol.devpub.repository.PostRepository;
+import ru.bechol.devpub.repository.*;
 import ru.bechol.devpub.request.CommentRequest;
-import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
-
-import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
 
 import java.security.Principal;
 import java.util.Map;
+
+import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
 
 /**
  * Класс CommentService.
@@ -32,7 +29,6 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@Trace
 public class CommentService {
 
     @Autowired

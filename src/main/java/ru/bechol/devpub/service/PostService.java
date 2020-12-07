@@ -2,46 +2,24 @@ package ru.bechol.devpub.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import ru.bechol.devpub.event.DevpubAppEvent;
-import ru.bechol.devpub.service.aspect.Trace;
-import ru.bechol.devpub.models.Post;
-import ru.bechol.devpub.models.Role;
-import ru.bechol.devpub.models.User;
+import ru.bechol.devpub.models.*;
 import ru.bechol.devpub.repository.PostRepository;
-import ru.bechol.devpub.request.ModerationRequest;
-import ru.bechol.devpub.request.PostRequest;
-import ru.bechol.devpub.response.CalendarResponse;
-import ru.bechol.devpub.response.PostDto;
-import ru.bechol.devpub.response.PostResponse;
-import ru.bechol.devpub.response.Response;
-import ru.bechol.devpub.service.enums.ModerationStatus;
-import ru.bechol.devpub.service.enums.PostStatus;
-import ru.bechol.devpub.service.enums.SettingValue;
-import ru.bechol.devpub.service.enums.SortMode;
-import ru.bechol.devpub.service.exception.CodeNotFoundException;
-import ru.bechol.devpub.service.exception.EnumValueNotFoundException;
-import ru.bechol.devpub.service.exception.PostNotFoundException;
-import ru.bechol.devpub.service.helper.ModeratorLoadBalancer;
-import ru.bechol.devpub.service.helper.PostMapperHelper;
+import ru.bechol.devpub.request.*;
+import ru.bechol.devpub.response.*;
+import ru.bechol.devpub.service.enums.*;
+import ru.bechol.devpub.service.exception.*;
+import ru.bechol.devpub.service.helper.*;
 
-import javax.management.relation.RoleNotFoundException;
 import java.security.Principal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.time.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
@@ -56,7 +34,6 @@ import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorR
  */
 @Slf4j
 @Service
-@Trace
 public class PostService {
 
     private static final String ROLE_MODERATOR = "ROLE_MODERATOR";

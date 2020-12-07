@@ -5,17 +5,12 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import ru.bechol.devpub.models.Post;
-import ru.bechol.devpub.models.Tag;
-import ru.bechol.devpub.repository.PostRepository;
-import ru.bechol.devpub.repository.TagRepository;
+import ru.bechol.devpub.models.*;
+import ru.bechol.devpub.repository.*;
 import ru.bechol.devpub.response.TagResponse;
-import ru.bechol.devpub.service.aspect.Trace;
-
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +25,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@Trace
 public class TagService {
 
     @Autowired

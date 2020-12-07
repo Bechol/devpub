@@ -1,25 +1,22 @@
 package ru.bechol.devpub.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.controller.DefaultController;
-import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.models.GlobalSetting;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.repository.GlobalSettingRepository;
 import ru.bechol.devpub.response.ErrorResponse;
+import ru.bechol.devpub.service.aspect.Trace;
 import ru.bechol.devpub.service.enums.SettingValue;
 import ru.bechol.devpub.service.exception.CodeNotFoundException;
 
-import javax.print.DocFlavor;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +32,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@Trace
 public class GlobalSettingsService {
 
     @Autowired
@@ -51,6 +47,7 @@ public class GlobalSettingsService {
      *
      * @return ResponseEntity<Map < String, Boolean>>.
      */
+    @Trace
     public ResponseEntity<Map<String, Boolean>> createGeneralSettingsMap() {
         Map<String, Boolean> settingsMap = globalSettingRepository.findAll().stream()
                 .collect(Collectors.toMap(GlobalSetting::getCode,

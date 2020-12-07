@@ -2,29 +2,21 @@ package ru.bechol.devpub.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.bechol.devpub.repository.UserRepository;
 import ru.bechol.devpub.response.Response;
-import ru.bechol.devpub.service.aspect.Trace;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
 /**
  * Класс StorageService.
@@ -36,7 +28,6 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@Trace
 public class StorageService {
 
     @Autowired

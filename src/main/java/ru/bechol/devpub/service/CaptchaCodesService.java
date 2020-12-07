@@ -3,25 +3,18 @@ package ru.bechol.devpub.service;
 import com.github.cage.Cage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.controller.DefaultController;
 import ru.bechol.devpub.event.DevpubAppEvent;
 import ru.bechol.devpub.models.CaptchaCodes;
 import ru.bechol.devpub.repository.CaptchaCodesRepository;
 import ru.bechol.devpub.response.CaptchaResponse;
-import ru.bechol.devpub.service.aspect.Trace;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Класс CaptchaCodesService.
@@ -36,7 +29,6 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@Trace
 public class CaptchaCodesService {
 
     @Autowired
