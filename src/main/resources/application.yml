@@ -2,7 +2,7 @@ spring:
   application:
     name: devpub-app
   mvc:
-    locale: ru
+    locale: ${MVC_LOCALE}
   jpa:
     generate-ddl: false
     show-sql: true
@@ -10,24 +10,24 @@ spring:
       ddl-auto: validate
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/devpub?stringtype=unspecified}
-    username: ${JDBC_DATABASE_USERNAME:postgres}
-    password: ${JDBC_DATABASE_PASSWORD:123}
+    url: ${DATABASE_URL}
+    username: ${JDBC_DATABASE_USERNAME}
+    password: ${JDBC_DATABASE_PASSWORD}
   mail:
-    protocol: smtps
-    host: smtp.gmail.com
-    port: 465
-    username: dev.pub.adm@gmail.com
-    password: smazrpsyukerpgkl
+    protocol: ${MAIL_PROTOCOL}
+    host: ${MAIL_HOST}
+    port: ${MAIL_HOST_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 
 mail-sender:
   debug: true
-  sender-name: DevPub
+  sender-name: ${MAIL_SENDER_NAME}
 
 #FLYWAY
 flyway:
-  user: ${JDBC_DATABASE_USERNAME:postgres}
-  password: ${JDBC_DATABASE_PASSWORD:123}
+  user: ${JDBC_DATABASE_USERNAME}
+  password: ${JDBC_DATABASE_PASSWORD}
 
 #mail page
 default:
@@ -40,9 +40,9 @@ default:
 
 #Cloudinary
 cloudinary:
-  cloud-name: hg7rd5cd5
-  apikey: 556696283735317
-  api-secret: sMG-S3M4UU7v9oi5D5F0YGnkyRI
+  cloud-name: ${CLY_CLOUD_NAME}
+  apikey: ${CLY_APIKEY}
+  api-secret: ${CLY_API_SECRET}
 
 #Captcha
 captcha:
