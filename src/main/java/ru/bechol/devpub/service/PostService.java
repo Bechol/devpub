@@ -263,7 +263,7 @@ public class PostService {
      */
     public PostDto showPost(long postId, Principal principal) throws PostNotFoundException {
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
-                messages.getMessage("warning.not-found", "post")));
+                messages.getMessage("warning.post.not-found")));
         User activeUser = null;
         if (principal != null) {
             activeUser = userService.findByEmail(principal.getName());
@@ -341,7 +341,7 @@ public class PostService {
         }
         User activeUser = userService.findByEmail(principal.getName());
         Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(
-                messages.getMessage("warning.not-found", "post")));
+                messages.getMessage("warning.post.not-found")));
         post.setActive(editPostRequest.isActive());
         post.setTitle(editPostRequest.getTitle());
         post.setText(editPostRequest.getText());
@@ -437,9 +437,7 @@ public class PostService {
      * @throws PostNotFoundException - исключение, если пост не найден.
      */
     public Post findById(long postId) throws PostNotFoundException {
-        return postRepository.findById(postId).
-                orElseThrow(() -> new PostNotFoundException(
-                        messages.getMessage("warning.not-found", "post")
-                ));
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException(messages.getMessage("warning.post.not-found")));
     }
 }

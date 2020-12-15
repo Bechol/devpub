@@ -1,16 +1,13 @@
 package ru.bechol.devpub.service.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.MissingPathVariableException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.*;
+import org.springframework.web.bind.annotation.*;
 import ru.bechol.devpub.response.ErrorResponse;
 import ru.bechol.devpub.service.Messages;
-import ru.bechol.devpub.service.exception.*;
 
 import javax.management.relation.RoleNotFoundException;
 import java.nio.file.InvalidPathException;
@@ -38,8 +35,7 @@ public class GlobalControllerExceptionHandler {
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException exception) {
-        return this.createErrorResponse("warning.required-not-present",
-                exception.getParameterType(), "request parameter", exception.getParameterName());
+        return this.createErrorResponse("warning.request-parameter.not-present");
     }
 
     /**
@@ -51,8 +47,7 @@ public class GlobalControllerExceptionHandler {
      */
     @ExceptionHandler(MissingPathVariableException.class)
     public ResponseEntity<ErrorResponse> handlePathVariableException(MissingPathVariableException exception) {
-        return this.createErrorResponse("warning.required-not-present",
-                "path variable", exception.getVariableName(), "null");
+        return this.createErrorResponse("warning.path-variable.not-present");
     }
 
     /**
@@ -64,8 +59,7 @@ public class GlobalControllerExceptionHandler {
      */
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UserNotFoundException exception) {
-        return this.createErrorResponse("warning.not-found-by", "user",
-                exception.getField(), exception.getFieldValue());
+        return this.createErrorResponse("warning.user.not-found");
     }
 
     /**
@@ -77,7 +71,7 @@ public class GlobalControllerExceptionHandler {
      */
     @ExceptionHandler(RoleNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleRoleNotFoundException(RoleNotFoundException exception) {
-        return this.createErrorResponse("warning.not-found-by", "role", "name", null);
+        return this.createErrorResponse("warning.role.not-found");
     }
 
     /**
@@ -89,7 +83,7 @@ public class GlobalControllerExceptionHandler {
      */
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePostNotFoundException(PostNotFoundException exception) {
-        return this.createErrorResponse("warning.not-found", "post");
+        return this.createErrorResponse("warning.post.not-found");
     }
 
     /**
@@ -101,7 +95,7 @@ public class GlobalControllerExceptionHandler {
      */
     @ExceptionHandler(CodeNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCodeNotFoundException(CodeNotFoundException exception) {
-        return this.createErrorResponse("warning.not-found-by", "global setting", "code", null);
+        return this.createErrorResponse("warning.code.not-found");
     }
 
     /**
@@ -118,7 +112,7 @@ public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(ModeratorNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleModeratorNotFoundException(ModeratorNotFoundException exception) {
-        return this.createErrorResponse("warning.not-found", "moderator");
+        return this.createErrorResponse("warning.moderator.not-found");
     }
 
     /**

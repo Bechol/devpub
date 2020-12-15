@@ -45,7 +45,7 @@ public class ModeratorLoadBalancer {
                 .collect(Collectors.toList());
         return availableModeratorList.stream().min(Comparator.comparing(user -> user.getModeratedPosts().size()))
                 .orElseThrow(() -> new ModeratorNotFoundException(
-                        messages.getMessage("warning.not-found", "Moderator")
-                ));
+                        messages.getMessage("warning.moderator.not-found"))
+                );
     }
 }

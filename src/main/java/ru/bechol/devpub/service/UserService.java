@@ -127,9 +127,7 @@ public class UserService implements UserDetailsService {
      */
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(
-                messages.getMessage("warning.not-found-by", "user", "email", email),
-                "email", email
-        ));
+                messages.getMessage("warning.user.not-found"), "email", email));
     }
 
     /**
@@ -154,7 +152,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
-                messages.getMessage("warning.not-found-by", "user", "email", email)));
+                messages.getMessage("warning.user.not-found")));
     }
 
     /**

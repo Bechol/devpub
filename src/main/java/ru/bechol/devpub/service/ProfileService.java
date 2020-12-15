@@ -121,12 +121,11 @@ public class ProfileService {
      */
     private void validateEmail(User user, String newEmail, Map<String, String> errorsMap) {
         if (!Strings.isNotEmpty(newEmail)) {
-            errorsMap.put("name", messages.getMessage("warning.is-empty", "email"));
+            errorsMap.put("name", messages.getMessage("warning.email.is-empty"));
             return;
         }
         if (!newEmail.equals(user.getEmail()) && userRepository.findByEmail(newEmail).isPresent()) {
-            errorsMap.put("email", messages.getMessage("warning.already-exist",
-                    "user", "email", user.getEmail()));
+            errorsMap.put("email", messages.getMessage("warning.user.already-exist.by-email"));
         } else {
             user.setEmail(newEmail);
         }
@@ -141,13 +140,12 @@ public class ProfileService {
      * @param errorsMap   - мапа с ошибками.
      */
     private void validateName(User user, String newUserName, Map<String, String> errorsMap) {
-        if (!Strings.isNotEmpty(newUserName)) {
-            errorsMap.put("name", messages.getMessage("warning.is-empty", "username"));
+        if (Strings.isEmpty(newUserName)) {
+            errorsMap.put("name", messages.getMessage("warning.username.is-empty"));
             return;
         }
         if (!newUserName.equals(user.getName()) && userRepository.findByName(newUserName).isPresent()) {
-            errorsMap.put("name", messages.getMessage("warning.already-exist",
-                    "user", "name", newUserName));
+            errorsMap.put("name", messages.getMessage("warning.user.already-exist.by-name"));
         } else {
             user.setName(newUserName);
         }
@@ -162,8 +160,8 @@ public class ProfileService {
      * @param errorsMap   - мапа с ошибками.
      */
     private void validatePassword(User user, String newPassword, Map<String, String> errorsMap) {
-        if (!Strings.isNotEmpty(newPassword)) {
-            errorsMap.put("password", messages.getMessage("warning.is-empty", "password"));
+        if (Strings.isEmpty(newPassword)) {
+            errorsMap.put("password", messages.getMessage("warning.password.is-empty"));
             return;
         }
         if (Strings.isNotEmpty(newPassword) && newPassword.length() < 6) {

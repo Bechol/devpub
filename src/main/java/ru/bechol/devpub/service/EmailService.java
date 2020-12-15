@@ -50,7 +50,7 @@ public class EmailService {
             helper.setFrom(username);
             helper.setTo(emailTo);
             helper.setSubject(subject);
-            mailMessage.setContent(message, "text/html");
+            mailMessage.setContent(message, "text/html; charset=UTF-8");
             applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
                     this, mailMessage, DevpubAppEvent.EventType.SEND_MAIL
             ));

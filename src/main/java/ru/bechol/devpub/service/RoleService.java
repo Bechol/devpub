@@ -34,8 +34,6 @@ public class RoleService {
      */
     public Role findByName(String roleName) throws RoleNotFoundException {
         return roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RoleNotFoundException(
-                        messages.getMessage("warning.not-found-by", "role", "name", roleName)
-                ));
+                .orElseThrow(() -> new RoleNotFoundException(messages.getMessage("warning.role.not-found")));
     }
 }

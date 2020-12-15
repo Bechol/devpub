@@ -100,9 +100,7 @@ public class GlobalSettingsService {
      */
     public boolean checkSetting(String code, SettingValue settingValue) throws CodeNotFoundException {
         GlobalSetting globalSetting = globalSettingRepository.findByCode(code)
-                .orElseThrow(() -> new CodeNotFoundException(
-                        messages.getMessage("warning.not-found-by", "Global setting", "code", code)
-                ));
+                .orElseThrow(() -> new CodeNotFoundException(messages.getMessage("warning.code.not-found")));
         return globalSetting.getValue().equals(settingValue.toString());
     }
 }
