@@ -6,11 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.*;
 import org.springframework.web.bind.annotation.*;
-import ru.bechol.devpub.response.ErrorResponse;
+import org.springframework.web.multipart.MultipartException;
+import ru.bechol.devpub.response.*;
 import ru.bechol.devpub.service.Messages;
 
 import javax.management.relation.RoleNotFoundException;
 import java.nio.file.InvalidPathException;
+import java.util.Map;
 
 /**
  * Класс GlobalControllerExceptionHandler.
@@ -25,6 +27,8 @@ public class GlobalControllerExceptionHandler {
 
     @Autowired
     private Messages messages;
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private String maxFileSize;
 
     /**
      * Метод handleMissingParameter.
@@ -113,6 +117,22 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(ModeratorNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleModeratorNotFoundException(ModeratorNotFoundException exception) {
         return this.createErrorResponse("warning.moderator.not-found");
+    }
+
+    /**
+     * Метод handleMultipartException.
+     * Обработка исключения MultipartException, а именно FileSizeLimitExceededException, возникающего при загрузке
+     * файла, размер которого, превышает максимально допустимый.
+     * @param exception - перехваченное исключение.
+     * @return bad_request с мапой ошибок.
+     */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<?> handleMultipartException(MultipartException exception) {
+        log.error(exception.getLocalizedMessage());
+        return ResponseEntity.badRequest().body(Response.builder().result(false)
+                .errors(Map.of("image-size", messages.getMessage("er.image-size", maxFileSize)))
+                .build()
+        );
     }
 
     /**

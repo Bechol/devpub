@@ -45,9 +45,6 @@ public class StorageService {
     @Value("${storage.root.location}")
     private String uploadPath;
 
-    @Value("${storage.max-size}")
-    private long maximumFileSize;
-
     @Value("${storage.image.allowed-formats}")
     private List<String> allowedImageFormats;
 
@@ -60,16 +57,16 @@ public class StorageService {
      */
     public ResponseEntity<?> uploadFile(MultipartFile file) {
         Map<String, String> errorMap = new HashMap<>();
-        if (!this.checkImageFormat(file)) {
-            errorMap.put("image-format", messages.getMessage("er.image-format", allowedImageFormats));
-        }
-        if (file.getSize() > maximumFileSize) {
-            errorMap.put("image-size", messages.getMessage("er.image-size", maximumFileSize / 1000, "KB"));
-        }
-        if (!errorMap.isEmpty()) {
-            return ResponseEntity.ok(Response.builder().result(false).errors(errorMap).build());
-        }
         try {
+            if (!this.checkImageFormat(file)) {
+                return ResponseEntity.badRequest().body(Response.builder().result(false)
+                        .errors(Map.of("image-format",
+                                messages.getMessage("er.image-format", allowedImageFormats)
+                                )
+                        )
+                        .build()
+                );
+            }
             FileSystemUtils.deleteRecursively(Paths.get(uploadPath));
             return ResponseEntity.ok(sendToCloudinary(file).getSecureUrl());
         } catch (IOException | NullPointerException exception) {

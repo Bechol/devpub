@@ -19,6 +19,10 @@ spring:
     port: ${MAIL_HOST_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
+  servlet:
+   multipart:
+      max-file-size: ${MAX_UPLOAD_FILE_SIZE}
+      max-request-size: ${MAX_REQUEST_SIZE}
 
 mail-sender:
   debug: true
@@ -65,7 +69,6 @@ announce:
 
 #Local storage
 storage:
-  max-size: 200000 #в байтах
   root:
     location: tmp_storage
   image:
