@@ -1,35 +1,21 @@
 package ru.bechol.devpub.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.*;
+import io.swagger.v3.oas.annotations.media.*;
+import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.bechol.devpub.request.PostIdRequest;
-import ru.bechol.devpub.request.PostRequest;
-import ru.bechol.devpub.response.PostDto;
-import ru.bechol.devpub.response.PostResponse;
-import ru.bechol.devpub.response.Response;
-import ru.bechol.devpub.service.PostService;
-import ru.bechol.devpub.service.VoteService;
-
-import ru.bechol.devpub.service.enums.PostStatus;
-import ru.bechol.devpub.service.enums.SortMode;
+import ru.bechol.devpub.request.*;
+import ru.bechol.devpub.response.*;
+import ru.bechol.devpub.service.*;
+import ru.bechol.devpub.service.enums.*;
 import ru.bechol.devpub.service.exception.*;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.Map;
 
 /**
  * Класс PostController.
@@ -299,7 +285,7 @@ public class PostController {
     })
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
-                                      @PathVariable("id") long postId, Principal principal) throws PostNotFoundException {
+                                      @PathVariable("id") long postId, Principal principal) throws Exception {
         return postService.editPost(editPostRequest, postId, principal, bindingResult);
     }
 
@@ -366,7 +352,7 @@ public class PostController {
                     content = {@Content(schema = @Schema(hidden = true))})
     })
     @PostMapping(value = "/like", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Boolean> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
+    public ResponseEntity<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
             throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, 1);
     }
@@ -401,7 +387,7 @@ public class PostController {
                     content = {@Content(schema = @Schema(hidden = true))})
     })
     @PostMapping(value = "/dislike", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Boolean> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
+    public ResponseEntity<?> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
             throws PostNotFoundException {
         return voteService.vote(postIdRequest, principal, -1);
     }

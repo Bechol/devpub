@@ -1,6 +1,7 @@
 package ru.bechol.devpub.service.helper;
 
 import lombok.Data;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.bechol.devpub.models.Post;
@@ -65,8 +66,7 @@ public class PostMapperHelper {
                 .user(UserDto.builder().id(post.getUser().getId()).name(post.getUser().getName()).build())
                 .title(post.getTitle())
                 .text(post.getText())
-                .announce(includeAnnounce ? post.getText().substring(0, this.announceStringLength)
-                        .concat(this.announceStringEnd) : null)
+                .announce(includeAnnounce ? createAnnounce(post.getText()) : null)
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
@@ -74,6 +74,16 @@ public class PostMapperHelper {
                 .comments(includeComments ? mapPostCommentList(post) : null)
                 .tags(includeTags ? mapPostTags(post) : null)
                 .build();
+    }
+
+    /**
+     * Метод createAnnounce.
+     * Создание краткого описания поста.
+     * @param postText - текст поста.
+     * @return - краткое описание поста.
+     */
+    private String createAnnounce(String postText) {
+        return Jsoup.parse(postText).text().substring(0, this.announceStringLength).concat(this.announceStringEnd);
     }
 
     /**

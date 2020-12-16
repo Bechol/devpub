@@ -1,16 +1,16 @@
 package ru.bechol.devpub.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import ru.bechol.devpub.models.Post;
-import ru.bechol.devpub.models.User;
-import ru.bechol.devpub.models.Vote;
+import ru.bechol.devpub.models.*;
 import ru.bechol.devpub.repository.VoteRepository;
 import ru.bechol.devpub.request.PostIdRequest;
+import ru.bechol.devpub.response.ErrorResponse;
 import ru.bechol.devpub.service.exception.PostNotFoundException;
 
 import java.security.Principal;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Класс VoteService.
@@ -31,6 +31,8 @@ public class VoteService {
     private UserService userService;
     @Autowired
     private PostService postService;
+    @Autowired
+    private Messages messages;
 
     /**
      * Метод checkLikeVote.
@@ -55,11 +57,16 @@ public class VoteService {
      * @param value         - 1:like, -1:dislike
      * @return Response.
      */
-    public Map<String, Boolean> vote(PostIdRequest postIdRequest, Principal principal, int value) throws PostNotFoundException {
+    public ResponseEntity<?> vote(PostIdRequest postIdRequest, Principal principal, int value) throws PostNotFoundException {
+        if (Objects.isNull(principal)) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.builder().message(messages.getMessage("er.unauthorized")).build()
+            );
+        }
         User activeUser = userService.findByEmail(principal.getName());
         Post post = postService.findById(postIdRequest.getPostId());
         if (this.isPostVoted(post, activeUser, value)) {
-            return Map.of("result", false);
+            return ResponseEntity.ok(Map.of("result", false));
         }
         Vote vote = new Vote();
         vote.setPost(post);
@@ -67,6 +74,6 @@ public class VoteService {
         vote.setValue(value);
         voteRepository.save(vote);
         voteRepository.deleteByPostAndUserAndValue(post, activeUser, value * -1);
-        return Map.of("result", true);
+        return ResponseEntity.ok(Map.of("result", true));
     }
 }

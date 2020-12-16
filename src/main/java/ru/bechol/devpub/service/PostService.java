@@ -335,7 +335,7 @@ public class PostService {
      * @return - ResponseEntity<?>.
      */
     public ResponseEntity<?> editPost(PostRequest editPostRequest, long postId, Principal principal,
-                                      BindingResult bindingResult) throws PostNotFoundException {
+                                      BindingResult bindingResult) throws Exception {
         if (bindingResult.hasErrors()) {
             return createBindingErrorResponse(bindingResult, HttpStatus.OK);
         }
@@ -347,8 +347,10 @@ public class PostService {
         post.setText(editPostRequest.getText());
         post.setTime(this.preparePostCreationTime(editPostRequest.getTimestamp()));
         post.setTags(tagService.mapTags(editPostRequest.getTags()));
-        post.setModerationStatus(ModerationStatus.NEW.toString());
-        postRepository.save(post);
+        post.setModerationStatus(this.acceptModerationStatus());
+        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
+                this, post, DevpubAppEvent.EventType.SAVE_POST
+        ));
         return ResponseEntity.ok(Response.builder().result(true).build());
     }
 
