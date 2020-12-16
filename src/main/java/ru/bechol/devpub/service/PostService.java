@@ -68,7 +68,7 @@ public class PostService {
      * @return LocalDateTime.
      */
     private LocalDateTime preparePostCreationTime(long timestamp) {
-        long now = LocalDateTime.now().toEpochSecond(ZoneOffset.of(clientZoneOffsetId));
+        long now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         return timestamp < now ? LocalDateTime.now() :
                 LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
     }

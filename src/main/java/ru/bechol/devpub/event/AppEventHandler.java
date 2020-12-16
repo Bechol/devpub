@@ -98,7 +98,8 @@ public class AppEventHandler {
         log.info("handle {}", devpubAppEvent.toString());
         String moderatorName = devpubAppEvent.getEventObject().getModerator().getName();
         postRepository.save(devpubAppEvent.getEventObject());
-        if(devpubAppEvent.getEventObject().isActive()) {
+        Post savedPost = devpubAppEvent.getEventObject();
+        if(savedPost.isActive() && savedPost.getModerationStatus().equals("NEW")) {
             emailService.send(devpubAppEvent.getEventObject().getModerator().getEmail(),
                     messages.getMessage("post.moderation-mail-subject"),
                     messages.getMessage("post.moderation-mail", moderatorName)
