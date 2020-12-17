@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * Класс PostResponse.
  * Сериализация полной информации о посте.
+ *
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com

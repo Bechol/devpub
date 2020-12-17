@@ -79,7 +79,7 @@ public class PostService {
      * @param offset   - сдвиг от 0 для постраничного вывода.
      * @param limit    - количество постов, которое надо вывести.
      * @param sortMode -  режим вывода (сортировка).
-     * @return - ResponseEntity<PostsResponse>.
+     * @return - PostResponse.
      */
     public PostResponse findAllPostsSorted(int offset, int limit, SortMode sortMode) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
@@ -110,7 +110,7 @@ public class PostService {
      * @param offset - сдвиг от 0 для постраничного вывода.
      * @param limit  - количество постов, которое надо вывести.
      * @param query  - поисковый запрос.
-     * @return ResponseEntity<PostsResponse>
+     * @return PostResponse
      */
     public PostResponse findPostsByTextContainingQuery(int offset, int limit, String query) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
@@ -130,7 +130,7 @@ public class PostService {
      * @param offset - сдвиг от 0 для постраничного вывода
      * @param limit  - количество постов, которое надо вывести
      * @param date   - дата, за которую необходимо отобрать посты.
-     * @return - фResponseEntity<PostsResponse>.
+     * @return - PostResponse.
      */
     public PostResponse findPostsByDate(int offset, int limit, String date) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
@@ -148,7 +148,7 @@ public class PostService {
      * @param offset - сдвиг от 0 для постраничного вывода
      * @param limit  - количество постов, которое надо вывести
      * @param tag    - тег, к которому привязаны посты.
-     * @return - ResponseEntity<PostsResponse>.
+     * @return - PostResponse.
      */
     public PostResponse findByTag(int offset, int limit, String tag) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
@@ -166,7 +166,7 @@ public class PostService {
      * @param offset     - сдвиг от 0 для постраничного вывода
      * @param limit      - количество постов, которое надо вывести
      * @param postStatus - статус модерации.
-     * @return - ResponseEntity<PostsResponse>.
+     * @return - PostResponse.
      */
     public PostResponse findActiveUserPosts(Principal principal, int offset, int limit, PostStatus postStatus) {
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.Direction.ASC, "time");

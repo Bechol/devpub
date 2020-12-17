@@ -1,10 +1,9 @@
 package ru.bechol.devpub.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Класс CalendarResponse.
@@ -18,7 +17,9 @@ import java.util.Map;
  */
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CalendarResponse {
-    List<String> years;
-    Map<String, Long> posts;
+
+	List<String> years;
+	Map<String, Long> posts;
 }

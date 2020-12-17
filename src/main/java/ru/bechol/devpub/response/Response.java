@@ -1,19 +1,19 @@
 package ru.bechol.devpub.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import lombok.Builder;
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Response<T> {
 
-    private final Boolean result;
-    private final T user;
-    @JsonUnwrapped
-    private final T post;
-    private final T errors;
+	Boolean result;
+	T user;
+	@JsonUnwrapped
+	T post;
+	T errors;
 
 }

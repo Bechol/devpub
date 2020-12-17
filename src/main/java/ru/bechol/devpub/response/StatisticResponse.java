@@ -1,7 +1,7 @@
 package ru.bechol.devpub.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Класс StatisticResponse.
@@ -13,12 +13,13 @@ import lombok.Getter;
  */
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class StatisticResponse {
 
-    private long postsCount;
-    private long likesCount;
-    private long dislikesCount;
-    private int viewsCount;
-    private long firstPublication;
+	long postsCount;
+	long likesCount;
+	long dislikesCount;
+	int viewsCount;
+	long firstPublication;
 
 }

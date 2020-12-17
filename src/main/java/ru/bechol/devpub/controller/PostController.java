@@ -47,7 +47,7 @@ public class PostController {
 	 * @param offset - сдвиг от 0 для постраничного вывода.
 	 * @param limit  - количество постов, которое надо вывести.
 	 * @param mode   -  режим вывода (сортировка).
-	 * @return ResponseEntity<PostsResponse>.
+	 * @return PostResponse.
 	 */
 	@Operation(summary = "Получение постов со всей сопутствующей информацией для главной страницы и подразделов " +
 			"\"Новые\", \"Самые обсуждаемые\", \"Лучшие\" и \"Старые\". ", description = "Метод выводит посты, " +
@@ -79,7 +79,7 @@ public class PostController {
 	 * @param offset - сдвиг от 0 для постраничного вывода.
 	 * @param limit  - количество постов, которое надо вывести.
 	 * @param query  -  поисковый запрос.
-	 * @return ResponseEntity<PostsResponse>.
+	 * @return PostResponse.
 	 */
 	@Operation(summary = "Возвращает посты, соответствующие поисковому запросу - строке query." +
 			" В случае, если запрос пустой, метод должен выводить все посты.", description = "Выводятся только активные" +
@@ -107,7 +107,7 @@ public class PostController {
 	 * @param offset - сдвиг от 0 для постраничного вывода.
 	 * @param limit  - количество постов, которое надо вывести.
 	 * @param date   -  дата в формате "YYYY-MM-dd"
-	 * @return ResponseEntity<PostsResponse>.
+	 * @return PostResponse.
 	 */
 	@Operation(summary = "Посты за указанную дату", description = "Выводятся только активные (поле is_active в таблице " +
 			"posts равно 1), утверждённые модератором (поле moderation_status равно ACCEPTED) посты с датой публикации " +
@@ -134,7 +134,7 @@ public class PostController {
 	 * @param offset - сдвиг от 0 для постраничного вывода.
 	 * @param limit  - количество постов, которое надо вывести.
 	 * @param tag    -  тег, к которому привязан пост.
-	 * @return ResponseEntity<PostsResponse>.
+	 * @return PostResponse.
 	 */
 	@Operation(summary = "Посты по тегу", description = "Выводятся только активные (поле is_active в таблице " +
 			"posts равно 1), утверждённые модератором (поле moderation_status равно ACCEPTED) посты с датой публикации " +
@@ -162,7 +162,7 @@ public class PostController {
 	 * @param offset - сдвиг от 0 для постраничного вывода.
 	 * @param limit  - количество постов, которое надо вывести.
 	 * @param status -  статус модерации.
-	 * @return ResponseEntity<PostsResponse>.
+	 * @return PostResponse.
 	 */
 	@Operation(summary = "Посты, которые создал авторизованный пользователь")
 	@ApiResponses(value = {
@@ -194,7 +194,7 @@ public class PostController {
 	 * @param postRequest   - json для создания поста.
 	 * @param bindingResult - результат валидации данных нового поста.
 	 * @param principal     - авторизованный пользователь.
-	 * @return ResponseEntity<PostsResponse>.
+	 * @return PostResponse.
 	 */
 	@Operation(summary = "Создание нового поста", description = "В случае, если заголовок или текст поста не установлены " +
 			"и/или слишком короткие (короче 3 и 50 символов соответственно), метод должен выводить ошибку " +

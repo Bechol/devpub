@@ -1,7 +1,7 @@
 package ru.bechol.devpub.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Класс ErrorResponse.
@@ -14,6 +14,8 @@ import lombok.Getter;
  */
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ErrorResponse {
-    private String message;
+
+	String message;
 }

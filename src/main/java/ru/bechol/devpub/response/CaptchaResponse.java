@@ -1,11 +1,11 @@
 package ru.bechol.devpub.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Класс CaptchaResponse.
- * Сериализация ответа на GET запрос /api/auth/captcha.
+ * Сериализация капчи.
  *
  * @author Oleg Bech
  * @author oleg071984@gmail.com
@@ -14,9 +14,10 @@ import lombok.Getter;
  */
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CaptchaResponse {
 
-    private String code;
-    private String secret;
-    private String image;
+    String code;
+    String secret;
+    String image;
 }
