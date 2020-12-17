@@ -60,8 +60,6 @@ captcha:
     delta: 2
   storage-limit: 1
 
-time-offset: +03:00 #разница во времени с UTC
-
 announce:
   string:
     length: 48

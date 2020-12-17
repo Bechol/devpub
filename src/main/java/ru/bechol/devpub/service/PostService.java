@@ -37,8 +37,6 @@ import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorR
 public class PostService {
 
     private static final String ROLE_MODERATOR = "ROLE_MODERATOR";
-    @Value("${time-offset}")
-    private String clientZoneOffsetId;
     @Autowired
     private PostRepository postRepository;
     @Autowired

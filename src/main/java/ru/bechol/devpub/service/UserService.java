@@ -2,39 +2,28 @@ package ru.bechol.devpub.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.*;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
+import org.springframework.validation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.bechol.devpub.event.DevpubAppEvent;
-import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.models.User;
-import ru.bechol.devpub.models.Vote;
-import ru.bechol.devpub.repository.UserRepository;
-import ru.bechol.devpub.repository.VoteRepository;
-import ru.bechol.devpub.request.ChangePasswordRequest;
-import ru.bechol.devpub.request.RegisterRequest;
-import ru.bechol.devpub.response.Response;
-import ru.bechol.devpub.response.StatisticResponse;
-import ru.bechol.devpub.response.UserData;
-import ru.bechol.devpub.service.enums.ModerationStatus;
-import ru.bechol.devpub.service.enums.SettingValue;
-import ru.bechol.devpub.service.exception.CodeNotFoundException;
-import ru.bechol.devpub.service.exception.UserNotFoundException;
+import ru.bechol.devpub.models.*;
+import ru.bechol.devpub.repository.*;
+import ru.bechol.devpub.request.*;
+import ru.bechol.devpub.response.*;
+import ru.bechol.devpub.service.enums.*;
+import ru.bechol.devpub.service.exception.*;
 
 import javax.management.relation.RoleNotFoundException;
 import java.security.Principal;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorResponse;
 
 /**
@@ -53,8 +42,6 @@ public class UserService implements UserDetailsService {
     private final static String ROLE_USER = "ROLE_USER";
     private final static Map<String, Boolean> RESULT_TRUE_MAP = Map.of("result", true);
     private final static Map<String, Boolean> RESULT_FALSE_MAP = Map.of("result", false);
-    @Value("${time-offset}")
-    private String clientZoneOffsetId;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -297,8 +284,8 @@ public class UserService implements UserDetailsService {
                 .likesCount(likesCount)
                 .dislikesCount(dislikesCount)
                 .viewsCount(viewsCount)
-                .firstPublication(!postList.isEmpty() ? postList.get(0).getTime()
-                        .toInstant(ZoneOffset.of(clientZoneOffsetId)).getEpochSecond() : 0)
+                .firstPublication(!postList.isEmpty() ?
+                        postList.get(0).getTime().atZone(ZoneId.systemDefault()).toEpochSecond() : 0)
                 .build();
     }
 }

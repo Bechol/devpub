@@ -10,7 +10,7 @@ import ru.bechol.devpub.response.CommentDto;
 import ru.bechol.devpub.response.PostDto;
 import ru.bechol.devpub.response.UserDto;
 
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,8 +24,6 @@ import java.util.stream.Collectors;
 @Data
 public class PostMapperHelper {
 
-    @Value("${time-offset}")
-    private String clientZoneOffsetId;
     @Value("${announce.string.length}")
     private int announceStringLength;
     @Value("${announce.string.end}")
@@ -62,7 +60,7 @@ public class PostMapperHelper {
         return PostDto.builder()
                 .id(post.getId())
                 .active(post.isActive())
-                .timestamp(post.getTime().toInstant(ZoneOffset.of(this.clientZoneOffsetId)).getEpochSecond())
+                .timestamp(post.getTime().atZone(ZoneId.systemDefault()).toEpochSecond())
                 .user(UserDto.builder().id(post.getUser().getId()).name(post.getUser().getName()).build())
                 .title(post.getTitle())
                 .text(post.getText())
@@ -96,7 +94,7 @@ public class PostMapperHelper {
     public List<CommentDto> mapPostCommentList(Post post) {
         return post.getComments().stream().map(comment -> CommentDto.builder()
                 .id(comment.getId())
-                .timestamp(comment.getTime().toInstant(ZoneOffset.of(this.clientZoneOffsetId)).getEpochSecond())
+                .timestamp(comment.getTime().toInstant(ZoneOffset.UTC).getEpochSecond())
                 .text(comment.getText())
                 .user(UserDto.builder().
                         id(post.getUser().getId())
