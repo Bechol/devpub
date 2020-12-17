@@ -1,25 +1,34 @@
 package ru.bechol.devpub.request;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import ru.bechol.devpub.request.validators.annotations.ExistEmailValidation;
-import ru.bechol.devpub.request.validators.annotations.ValidPassword;
+import com.fasterxml.jackson.annotation.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.request.validators.annotations.*;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * Класс RegisterRequest.
+ * Для десеарилизации тела запросов на регистрацию пользователя.
+ *
+ * @author Oleg Bech
+ * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.controller.ApiAuthController
+ * @see ru.bechol.devpub.service.UserService
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RegisterRequest {
 
-    @JsonProperty("e_mail")
-    @ExistEmailValidation
-    private String email;
-    @ValidPassword
-    private String password;
-    @NotEmpty(message = "Имя указано неверно")
-    private String name;
-    private String captcha;
-    private String captcha_secret;
+	@JsonProperty("e_mail")
+	@ExistEmailValidation
+	String email;
+	@ValidPassword
+	String password;
+	@NotEmpty(message = "Имя указано неверно")
+	String name;
+	String captcha;
+	String captcha_secret;
 
 }
