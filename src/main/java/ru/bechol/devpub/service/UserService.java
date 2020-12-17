@@ -15,6 +15,7 @@ import ru.bechol.devpub.models.*;
 import ru.bechol.devpub.repository.*;
 import ru.bechol.devpub.request.*;
 import ru.bechol.devpub.response.*;
+import ru.bechol.devpub.response.dto.UserDto;
 import ru.bechol.devpub.service.enums.*;
 import ru.bechol.devpub.service.exception.*;
 
@@ -158,7 +159,7 @@ public class UserService implements UserDetailsService {
             return ResponseEntity.ok(RESULT_FALSE_MAP);
         }
         return ResponseEntity.ok().body(Response.builder().result(true)
-                .user(UserData.builder()
+                .user(UserDto.builder()
                         .id(authorizedUser.getId())
                         .email(authorizedUser.getEmail())
                         .name(authorizedUser.getName())

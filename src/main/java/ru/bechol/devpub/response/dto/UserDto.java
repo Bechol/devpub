@@ -1,8 +1,9 @@
-package ru.bechol.devpub.response;
+package ru.bechol.devpub.response.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.response.PostResponse;
 
 /**
  * Класс UserDto
@@ -11,19 +12,22 @@ import lombok.Getter;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.service.UserService
  * @see PostResponse
  * @see PostDto
  */
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
 
-    private long id;
-    private String name;
-    private String photo;
-    private String email;
-    private Boolean moderation;
-    private Integer moderationCount;
-    private Boolean settings;
+	long id;
+	String name;
+	String photo;
+	String email;
+	Boolean moderation;
+	Long moderationCount;
+	Boolean settings;
+
 }

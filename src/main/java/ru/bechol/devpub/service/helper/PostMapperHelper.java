@@ -4,21 +4,24 @@ import lombok.Data;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ru.bechol.devpub.models.Post;
-import ru.bechol.devpub.models.Tag;
-import ru.bechol.devpub.response.CommentDto;
-import ru.bechol.devpub.response.PostDto;
-import ru.bechol.devpub.response.UserDto;
+import ru.bechol.devpub.models.*;
+import ru.bechol.devpub.response.dto.CommentDto;
+import ru.bechol.devpub.response.dto.PostDto;
+import ru.bechol.devpub.response.dto.UserDto;
 
 import java.time.*;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Класс PostMapperHelper.
- *
+ * Маппинг постов.
  * @author Oleg Bech
  * @email oleg071984@gmail.com
+ * @see ru.bechol.devpub.service.PostService
+ * @see Post
+ * @see PostDto
+ * @see CommentDto
  */
 @Component
 @Data
@@ -64,13 +67,13 @@ public class PostMapperHelper {
                 .user(UserDto.builder().id(post.getUser().getId()).name(post.getUser().getName()).build())
                 .title(post.getTitle())
                 .text(post.getText())
-                .announce(includeAnnounce ? createAnnounce(post.getText()) : null)
+                .announce(includeAnnounce ? this.createAnnounce(post.getText()) : null)
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
                 .viewCount(post.getViewCount())
-                .comments(includeComments ? mapPostCommentList(post) : null)
-                .tags(includeTags ? mapPostTags(post) : null)
+                .comments(includeComments ? this.mapPostCommentList(post) : null)
+                .tags(includeTags ? this.mapPostTags(post) : null)
                 .build();
     }
 
@@ -91,17 +94,19 @@ public class PostMapperHelper {
      * @param post - пост.
      * @return List<CommentDto>.
      */
-    public List<CommentDto> mapPostCommentList(Post post) {
-        return post.getComments().stream().map(comment -> CommentDto.builder()
-                .id(comment.getId())
-                .timestamp(comment.getTime().toInstant(ZoneOffset.UTC).getEpochSecond())
-                .text(comment.getText())
-                .user(UserDto.builder().
-                        id(post.getUser().getId())
-                        .name(post.getUser().getName())
-                        .photo(post.getUser().getPhotoLink())
-                        .build())
-                .build())
+    private List<CommentDto> mapPostCommentList(Post post) {
+        return post.getComments().stream().sorted(Comparator.comparing(Comment::getId))
+                .map(comment -> CommentDto.builder()
+                    .id(comment.getId())
+                    .timestamp(comment.getTime().atZone(ZoneId.systemDefault()).toEpochSecond())
+                    .text(comment.getText())
+                    .user(UserDto.builder()
+                            .id(comment.getUser().getId())
+                            .name(comment.getUser().getName())
+                            .photo(comment.getUser().getPhotoLink())
+                            .build())
+                    .build()
+                )
                 .collect(Collectors.toList());
     }
 
@@ -112,7 +117,7 @@ public class PostMapperHelper {
      * @param post - пост.
      * @return List<String>.
      */
-    public List<String> mapPostTags(Post post) {
+    private List<String> mapPostTags(Post post) {
         return post.getTags().stream().map(Tag::getName).collect(Collectors.toList());
     }
 }

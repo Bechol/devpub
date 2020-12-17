@@ -13,6 +13,7 @@ import ru.bechol.devpub.models.*;
 import ru.bechol.devpub.repository.PostRepository;
 import ru.bechol.devpub.request.*;
 import ru.bechol.devpub.response.*;
+import ru.bechol.devpub.response.dto.PostDto;
 import ru.bechol.devpub.service.enums.*;
 import ru.bechol.devpub.service.exception.*;
 import ru.bechol.devpub.service.helper.*;

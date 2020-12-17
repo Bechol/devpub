@@ -1,14 +1,15 @@
 package ru.bechol.devpub.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.response.dto.PostDto;
 
 import java.util.List;
 
 /**
  * Класс PostResponse.
- *
+ * Сериализация полной информации о посте.
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
@@ -16,10 +17,11 @@ import java.util.List;
  */
 @Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostResponse {
 
-    private long count;
-    private List<PostDto> posts;
-    private PostDto post;
+	long count;
+	List<PostDto> posts;
+	PostDto post;
 }
