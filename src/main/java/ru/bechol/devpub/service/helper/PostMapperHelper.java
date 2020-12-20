@@ -67,7 +67,8 @@ public class PostMapperHelper {
                 .user(UserDto.builder().id(post.getUser().getId()).name(post.getUser().getName()).build())
                 .title(post.getTitle())
                 .text(post.getText())
-                .announce(includeAnnounce ? this.createAnnounce(post.getText()) : null)
+                .announce(includeAnnounce && Jsoup.parse(post.getText() ).text().length() > announceStringLength ?
+                        this.createAnnounce(post.getText()) : "")
                 .likeCount(post.getVotes().stream().filter(vote -> vote.getValue() == 1).count())
                 .dislikeCount(post.getVotes().stream().filter(vote -> vote.getValue() == -1).count())
                 .commentCount(post.getComments().size())
