@@ -67,8 +67,6 @@ public class StorageService {
                         .build()
                 );
             }
-            Path deletableFile = Paths.get(uploadPath + "/" + file.getName());
-            Files.delete(deletableFile);
             return ResponseEntity.ok(sendToCloudinary(file).getSecureUrl());
         } catch (IOException | NullPointerException exception) {
             log.error(exception.getMessage());
@@ -88,6 +86,8 @@ public class StorageService {
     public CloudinaryResult sendToCloudinary(MultipartFile file) throws IOException {
         File uploadedFile = convertMultiPartToFile(file);
         Map uploadResult = cloudinary.uploader().upload(uploadedFile, ObjectUtils.emptyMap());
+        Path deletableFile = Paths.get(uploadPath + "/" + file.getOriginalFilename());
+        Files.delete(deletableFile);
         return CloudinaryResult.builder()
                 .secureUrl((String) uploadResult.get("secure_url"))
                 .publicId((String) uploadResult.get("public_id"))
