@@ -82,7 +82,7 @@ public class ApiAuthController {
             " если введённые данные верны. Если данные неверные - пользователь не создаётся, " +
             "а метод возвращает соответствующую ошибку.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Новый пост сохранен",
+            @ApiResponse(responseCode = "200", description = "Пользователь зарегистрирован",
                     content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = {
                             @ExampleObject(value = "{\n\t\"result\": true\n}")})
                     }),
@@ -93,6 +93,10 @@ public class ApiAuthController {
                                     "\t\t\"name\": \"Имя указано неверно\"," +
                                     "\t\t\"password\": \"Пароль короче 6-ти символов\"," +
                                     "\t\t\"captcha\": \"Код с картинки введён неверно\"\n}\n}")})
+                    }),
+            @ApiResponse(responseCode = "404", description = "Регистрация новых пользователей выключена.",
+                    content = {@Content(examples = {
+                            @ExampleObject(value = "Регистрация сейчас невозможна. Попробуйте повторить позже.")})
                     })
     })
     @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -74,7 +74,7 @@ public class UserService implements UserDetailsService {
     public ResponseEntity<?> registrateNewUser(RegisterRequest registerRequest, BindingResult bindingResult)
             throws Exception {
         if(globalSettingsService.checkSetting("MULTIUSER_MODE", SettingValue.NO)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messages.getMessage("multi-user.off"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messages.getMessage("multi-user.off"));
         }
         if (!captchaCodesService.captchaIsExist(registerRequest.getCaptcha(), registerRequest.getCaptcha_secret())) {
             bindingResult.addError(new FieldError(
