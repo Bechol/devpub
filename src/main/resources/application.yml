@@ -68,7 +68,7 @@ announce:
 #Local storage
 storage:
   root:
-    location: tmp_storage
+    location: /tmp_storage
   image:
     allowed-formats: jpg, png
 

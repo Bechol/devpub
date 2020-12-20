@@ -67,7 +67,7 @@ public class StorageService {
                         .build()
                 );
             }
-            FileSystemUtils.deleteRecursively(Paths.get(uploadPath));
+            FileSystemUtils.deleteRecursively(new File(uploadPath + "/" + file.getName()));
             return ResponseEntity.ok(sendToCloudinary(file).getSecureUrl());
         } catch (IOException | NullPointerException exception) {
             log.error(exception.getMessage());

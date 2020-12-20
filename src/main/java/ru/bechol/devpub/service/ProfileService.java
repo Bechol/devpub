@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,15 +67,17 @@ public class ProfileService {
      * @return
      */
     public Response<?> editProfileWithPhoto(EditProfileRequest editProfileRequest, MultipartFile file,
-                                            Principal principal) {
+                                            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        if (Objects.isNull(user)) {
+            return Response.builder().result(false).build();
+        }
         Map<String, String> errorsMap = new HashMap<>();
-        User user = userService.findByEmail(principal.getName());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> editProfileParametersMap = objectMapper.convertValue(editProfileRequest, Map.class);
         handleEditParameters(editProfileParametersMap, user, errorsMap);
-        StorageService.CloudinaryResult cloudinaryResult = null;
         try {
-            cloudinaryResult = storageService.sendToCloudinary(file);
+            StorageService.CloudinaryResult cloudinaryResult = storageService.sendToCloudinary(file);
             user.setPhotoLink(cloudinaryResult.getSecureUrl());
             user.setPhotoPublicId(cloudinaryResult.getPublicId());
         } catch (IOException exception) {

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.bechol.devpub.request.EditProfileRequest;
@@ -96,14 +97,14 @@ public class ProfileController {
      *
      * @param photo              - аватар пользователя.
      * @param editProfileRequest - тело запроса на изменение.
-     * @param principal          - авторизованный пользователь.
+     * @param authentication          - авторизованный пользователь.
      * @return - Response
      */
     @Parameter(name = "avatar", description = "Аватар", content = {@Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
             schema = @Schema(name = "photo", implementation = MultipartFile.class))})
     @PostMapping(value = "/my", consumes = "multipart/form-data", produces = MediaType.APPLICATION_JSON_VALUE)
     public Response<?> editProfile(@RequestParam(required = false) MultipartFile photo,
-                                   @ModelAttribute EditProfileRequest editProfileRequest, Principal principal) {
-        return profileService.editProfileWithPhoto(editProfileRequest, photo, principal);
+                                   @ModelAttribute EditProfileRequest editProfileRequest, Authentication authentication) {
+        return profileService.editProfileWithPhoto(editProfileRequest, photo, authentication);
     }
 }
