@@ -1,5 +1,7 @@
 package ru.bechol.devpub.service.exception;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import ru.bechol.devpub.service.Messages;
 
 import javax.management.relation.RoleNotFoundException;
 import java.nio.file.InvalidPathException;
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Map;
 
 /**
@@ -23,12 +26,13 @@ import java.util.Map;
  */
 @Slf4j
 @RestControllerAdvice
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class GlobalControllerExceptionHandler {
 
     @Autowired
-    private Messages messages;
+    Messages messages;
     @Value("${spring.servlet.multipart.max-file-size}")
-    private String maxFileSize;
+    String maxFileSize;
 
     /**
      * Метод handleMissingParameter.
@@ -134,6 +138,20 @@ public class GlobalControllerExceptionHandler {
                 .build()
         );
     }
+
+    /**
+     * Метод handleMultipartException.
+     * Обработка исключения UserPrincipalNotFoundException, если неавторизованный пользователь пытается совершить
+     * какое-либо действие.
+     * @param exception - перехваченное исключение.
+     * @return bad_request с мапой ошибок.
+     */
+    @ExceptionHandler(UserPrincipalNotFoundException.class)
+    public ResponseEntity<?> handleUserPrincipalNotFoundException(UserPrincipalNotFoundException exception) {
+        log.error(exception.getLocalizedMessage());
+        return this.createErrorResponse("er.you-unauthorized");
+    }
+
 
     /**
      * Метод createErrorResponse.

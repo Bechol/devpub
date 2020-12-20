@@ -2,8 +2,12 @@ package ru.bechol.devpub.service;
 
 import com.cloudinary.Cloudinary;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +18,7 @@ import ru.bechol.devpub.request.EditProfileRequest;
 import ru.bechol.devpub.response.Response;
 
 import java.io.IOException;
-import java.security.Principal;
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.*;
 
 /**
@@ -24,64 +28,56 @@ import java.util.*;
  * @author Oleg Bech
  * @email oleg071984@gmail.com
  */
+@Slf4j
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProfileService {
 
     @Autowired
-    private UserService userService;
+    UserService userService;
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
     @Autowired
-    private Messages messages;
+    Messages messages;
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
     @Autowired
-    private Cloudinary cloudinary;
+    Cloudinary cloudinary;
     @Autowired
-    private StorageService storageService;
+    StorageService storageService;
 
     /**
-     * Метод editProfileWithoutPhoto.
+     * Метод editProfile.
      * Изменение email, имени пользователя или пароля без удаления или изменения фото.
      *
      * @param editParametersMap - новые параметры профиля.
-     * @param principal         - авторизованный пользователь.
      * @return - ResponseEntity.
      */
-    public Response<?> editProfileWithoutPhoto(Map<String, String> editParametersMap, Principal principal) {
+    public ResponseEntity<?> editProfile(Map<String, String> editParametersMap, Authentication authentication)
+            throws UserPrincipalNotFoundException {
         Map<String, String> errorsMap = new HashMap<>();
-        User user = userService.findByEmail(principal.getName());
+        User user = userService.findActiveUser(authentication);
         handleEditParameters(editParametersMap, user, errorsMap);
         if (errorsMap.size() > 0) {
-            return Response.builder().result(false).errors(errorsMap).build();
+            return ResponseEntity.ok(Response.builder().result(false).errors(errorsMap).build());
         }
         userRepository.save(user);
-        return Response.builder().result(true).build();
+        return ResponseEntity.ok(Response.builder().result(true).build());
     }
 
-    /**
-     *
-     * @param editProfileRequest
-     * @param file
-     * @param principal
-     * @return
-     */
-    public Response<?> editProfileWithPhoto(EditProfileRequest editProfileRequest, MultipartFile file,
-                                            Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        if (Objects.isNull(user)) {
-            return Response.builder().result(false).build();
-        }
+    public Response<?> editProfile(MultipartFile file, EditProfileRequest editProfileRequest,
+                                   Authentication authentication) throws IOException {
+        User user = userService.findActiveUser(authentication);
         Map<String, String> errorsMap = new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> editProfileParametersMap = objectMapper.convertValue(editProfileRequest, Map.class);
         handleEditParameters(editProfileParametersMap, user, errorsMap);
-        try {
-            StorageService.CloudinaryResult cloudinaryResult = storageService.sendToCloudinary(file);
-            user.setPhotoLink(cloudinaryResult.getSecureUrl());
-            user.setPhotoPublicId(cloudinaryResult.getPublicId());
-        } catch (IOException exception) {
-            return Response.builder().result(false).build();
+        StorageService.CloudinaryResult cloudinaryResult = storageService.sendToCloudinary(file);
+        this.deletePhoto(user, "1");
+        user.setPhotoLink(cloudinaryResult.getSecureUrl());
+        user.setPhotoPublicId(cloudinaryResult.getPublicId());
+        if (errorsMap.size() > 0) {
+            return Response.builder().result(false).errors(errorsMap).build();
         }
         userRepository.save(user);
         return Response.builder().result(true).build();
@@ -97,6 +93,7 @@ public class ProfileService {
      */
     private void handleEditParameters(Map<String, String> editParametersMap, User user, Map<String, String> errorsMap) {
         editParametersMap.keySet().forEach(userPropertyKey -> {
+            log.info("start handling new profile parameters..");
             switch (userPropertyKey) {
                 case "email":
                     this.validateEmail(user, editParametersMap.get("email"), errorsMap);
@@ -112,6 +109,7 @@ public class ProfileService {
                     break;
             }
         });
+        log.info("Validation of new user profile finished");
     }
 
     /**
@@ -122,16 +120,20 @@ public class ProfileService {
      * @param newEmail  - новый адрес email.
      * @param errorsMap - мапа с ошибками.
      */
-    private void validateEmail(User user, String newEmail, Map<String, String> errorsMap) {
-        if (!Strings.isNotEmpty(newEmail)) {
-            errorsMap.put("name", messages.getMessage("warning.email.is-empty"));
-            return;
-        }
-        if (!newEmail.equals(user.getEmail()) && userRepository.findByEmail(newEmail).isPresent()) {
+    private User validateEmail(User user, String newEmail, Map<String, String> errorsMap) {
+        if (Strings.isEmpty(newEmail)) {
+            log.warn("new user email is null or empty");
+            errorsMap.put("email", messages.getMessage("warning.email.is-empty"));
+        } else if (newEmail.equals(user.getEmail())) {
+            log.warn("changed email equals old email");
+        } else if (!newEmail.equals(user.getEmail()) && userRepository.findByEmail(newEmail).isPresent()) {
+            log.warn("new user email already exists in database");
             errorsMap.put("email", messages.getMessage("warning.user.already-exist.by-email"));
         } else {
             user.setEmail(newEmail);
+            log.info("new user email has been successfully changed");
         }
+        return user;
     }
 
     /**
@@ -144,13 +146,16 @@ public class ProfileService {
      */
     private void validateName(User user, String newUserName, Map<String, String> errorsMap) {
         if (Strings.isEmpty(newUserName)) {
+            log.warn("new user name is null or empty");
             errorsMap.put("name", messages.getMessage("warning.username.is-empty"));
-            return;
-        }
-        if (!newUserName.equals(user.getName()) && userRepository.findByName(newUserName).isPresent()) {
+        } else if (newUserName.equals(user.getName())) {
+            log.warn("new user name equals old name");
+        } else if (!newUserName.equals(user.getName()) && userRepository.findByName(newUserName).isPresent()) {
+            log.warn("new user name already exists in database");
             errorsMap.put("name", messages.getMessage("warning.user.already-exist.by-name"));
         } else {
             user.setName(newUserName);
+            log.info("new user name has been successfully changed");
         }
     }
 
@@ -165,13 +170,14 @@ public class ProfileService {
     private void validatePassword(User user, String newPassword, Map<String, String> errorsMap) {
         if (Strings.isEmpty(newPassword)) {
             errorsMap.put("password", messages.getMessage("warning.password.is-empty"));
-            return;
-        }
-        if (Strings.isNotEmpty(newPassword) && newPassword.length() < 6) {
+            log.warn("new user password is null or empty");
+        } else if (Strings.isNotEmpty(newPassword) && newPassword.length() < 6) {
+            log.warn("new user password is not correct: length less than 6 symbols");
             errorsMap.put("password", messages.getMessage("ve.password-length", 6));
-            return;
+        } else {
+            user.setPassword(passwordEncoder.encode(newPassword));
+            log.info("old user password has been successfully changed");
         }
-        user.setPassword(passwordEncoder.encode(newPassword));
     }
 
     /**
@@ -187,8 +193,10 @@ public class ProfileService {
                 cloudinary.uploader().destroy(user.getPhotoPublicId(), null);
                 user.setPhotoLink(null);
                 user.setPhotoPublicId(null);
+                log.info("user avatar has been successfully deleted");
             }
         } catch (IOException exception) {
+            log.warn("user avatar was not deleted, got exception in cloudinary support");
             exception.printStackTrace();
         }
     }

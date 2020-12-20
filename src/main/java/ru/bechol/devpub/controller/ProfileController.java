@@ -1,15 +1,11 @@
 package ru.bechol.devpub.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.*;
+import io.swagger.v3.oas.annotations.media.*;
+import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +13,8 @@ import ru.bechol.devpub.request.EditProfileRequest;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.service.ProfileService;
 
-import java.security.Principal;
+import java.io.IOException;
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Map;
 
 /**
@@ -83,11 +80,12 @@ public class ProfileController {
             )
             }
     )
-    @PostMapping(value = "/my", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Response<?> changeUserNameEmailAndPassword(@RequestBody Map<String, String> editProfileParametersMap,
-                                                      Principal principal) {
-        return profileService.editProfileWithoutPhoto(editProfileParametersMap, principal);
-
+    @PostMapping(value = "/my", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> changeUserNameEmailAndPassword(@RequestBody Map<String, String> editProfileParametersMap,
+                                                            Authentication authentication)
+            throws UserPrincipalNotFoundException {
+        return profileService.editProfile(editProfileParametersMap, authentication);
     }
 
     /**
@@ -102,9 +100,10 @@ public class ProfileController {
      */
     @Parameter(name = "avatar", description = "Аватар", content = {@Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
             schema = @Schema(name = "photo", implementation = MultipartFile.class))})
-    @PostMapping(value = "/my", consumes = "multipart/form-data", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Response<?> editProfile(@RequestParam(required = false) MultipartFile photo,
-                                   @ModelAttribute EditProfileRequest editProfileRequest, Authentication authentication) {
-        return profileService.editProfileWithPhoto(editProfileRequest, photo, authentication);
+                                   @ModelAttribute EditProfileRequest editProfileRequest, Authentication authentication)
+            throws IOException {
+        return profileService.editProfile(photo, editProfileRequest, authentication);
     }
 }

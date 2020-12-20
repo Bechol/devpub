@@ -1,9 +1,13 @@
 package ru.bechol.devpub.service;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,8 +24,9 @@ import ru.bechol.devpub.service.enums.*;
 import ru.bechol.devpub.service.exception.*;
 
 import javax.management.relation.RoleNotFoundException;
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.security.Principal;
-import java.time.*;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,32 +42,34 @@ import static ru.bechol.devpub.service.helper.ErrorMapHelper.createBindingErrorR
  * @see ru.bechol.devpub.models.User
  * @see UserRepository
  */
+@Slf4j
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserService implements UserDetailsService {
 
-    private final static String ROLE_USER = "ROLE_USER";
-    private final static Map<String, Boolean> RESULT_TRUE_MAP = Map.of("result", true);
-    private final static Map<String, Boolean> RESULT_FALSE_MAP = Map.of("result", false);
+    final static String ROLE_USER = "ROLE_USER";
+    final static Map<String, Boolean> RESULT_TRUE_MAP = Map.of("result", true);
+    final static Map<String, Boolean> RESULT_FALSE_MAP = Map.of("result", false);
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
     @Autowired
-    private RoleService roleService;
+    RoleService roleService;
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
     @Autowired
-    private Messages messages;
+    Messages messages;
     @Autowired
-    private EmailService emailService;
+    EmailService emailService;
     @Autowired
-    private CaptchaCodesService captchaCodesService;
+    CaptchaCodesService captchaCodesService;
     @Autowired
-    private PostService postService;
+    PostService postService;
     @Autowired
-    private VoteRepository voteRepository;
+    VoteRepository voteRepository;
     @Autowired
-    private GlobalSettingsService globalSettingsService;
+    GlobalSettingsService globalSettingsService;
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+    ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Метод registrateNewUser.
@@ -167,6 +174,15 @@ public class UserService implements UserDetailsService {
                         .moderationCount(postService.findPostsByStatus(ModerationStatus.NEW))
                         .moderation(authorizedUser.isModerator())
                         .settings(authorizedUser.isModerator()).build()).build());
+    }
+
+    public User findActiveUser(Authentication authentication) throws UserPrincipalNotFoundException {
+        User user = (User) authentication.getPrincipal();
+        if (Objects.isNull(user)) {
+            log.warn("User is not authorized");
+            throw new UserPrincipalNotFoundException("User is not authorized");
+        }
+        return user;
     }
 
     /**
