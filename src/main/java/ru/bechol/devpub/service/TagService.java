@@ -45,7 +45,8 @@ public class TagService {
                 .peek(tag -> tag.getPosts().removeIf(this::checkPost))
                 .map(tag -> TagResponse.TagElement.builder()
                         .name(tag.getName())
-                        .weight(tag.getPosts().size() > 0 ? tag.getPosts().size() / (float) postRepository.count() : 0)
+                        .weight(tag.getPosts().size() > 0 ?
+                                tag.getPosts().size() / (float) postRepository.count() * 5 : 0)
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(TagResponse.builder().tags(tagsNodes).build());
