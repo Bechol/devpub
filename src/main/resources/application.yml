@@ -2,7 +2,7 @@ spring:
   application:
     name: devpub-app
   mvc:
-    locale: ${MVC_LOCALE}
+    locale: ${MVC_LOCALE} #ru / en
   jpa:
     generate-ddl: false
     show-sql: true
@@ -21,8 +21,8 @@ spring:
     password: ${MAIL_PASSWORD}
   servlet:
    multipart:
-      max-file-size: ${MAX_UPLOAD_FILE_SIZE}
-      max-request-size: ${MAX_REQUEST_SIZE}
+      max-file-size: 5MB #MB - megabytes, KB - kilobytes
+      max-request-size: 5MB
 
 mail-sender:
   debug: true
@@ -33,7 +33,7 @@ flyway:
   user: ${JDBC_DATABASE_USERNAME}
   password: ${JDBC_DATABASE_PASSWORD}
 
-#mail page
+#main page footer info
 default:
   title: DevPub
   subtitle: Рассказы разработчиков
