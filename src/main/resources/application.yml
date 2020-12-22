@@ -2,7 +2,7 @@ spring:
   application:
     name: devpub-app
   mvc:
-    locale: ${MVC_LOCALE} #ru / en
+    locale: ${MVC_LOCALE:ru}
   jpa:
     generate-ddl: false
     show-sql: true
@@ -21,8 +21,8 @@ spring:
     password: ${MAIL_PASSWORD}
   servlet:
    multipart:
-      max-file-size: 5MB #MB - megabytes, KB - kilobytes
-      max-request-size: 5MB
+      max-file-size: ${MAX_FILE_SIZE:5MB}
+      max-request-size: ${MAX_REQUEST_SIZE:5MB}
 
 mail-sender:
   debug: true
