@@ -1,14 +1,11 @@
 package ru.bechol.devpub.repository;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import ru.bechol.devpub.models.Post;
-import ru.bechol.devpub.models.User;
-
+import ru.bechol.devpub.models.*;
 
 import javax.persistence.Tuple;
 import java.time.LocalDateTime;
@@ -111,22 +108,57 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Long> {
     Page<Post> findByModeratedByAndModerationStatusAndActiveTrue(User moderator, String moderationStatus,
                                                                  Pageable pageable);
 
-    /**
-     * Метод findAllYearsWithPosts.
-     * Подготовка списка "годов", за которые была создана хотя бы одна публикация.
-     *
-     * @return List<String>.
-     */
-    @Query("select year(p.time) from Post p group by year(p.time)")
-    List<String> findAllYearsWithPosts();
+	/**
+	 * Метод findAllYearsWithPosts.
+	 * Подготовка списка "годов", за которые была создана хотя бы одна публикация.
+	 *
+	 * @return List<String>.
+	 */
+	@Query("select year(p.time) from Post p group by year(p.time)")
+	List<String> findAllYearsWithPosts();
 
-    /**
-     * Метод agregatePostsByYear.
-     * Агрегация постов по дате за год. В ответ включена дата и количество постов с этой датой.
-     *
-     * @param year - год для выборки.
-     * @return List<Tuple>
-     */
-    @Query("select to_char(p.time, 'YYYY-MM-DD') as date, count(p) as count from Post p where year(p.time) = :year group by date")
-    List<Tuple> agregatePostsByYear(@Param("year") Integer year);
+	/**
+	 * Метод agregatePostsByYear.
+	 * Агрегация постов по дате за год. В ответ включена дата и количество постов с этой датой.
+	 *
+	 * @param year - год для выборки.
+	 * @return List<Tuple>
+	 */
+	@Query("select to_char(p.time, 'YYYY-MM-DD') as date, count(p) as count from Post p where year(p.time) = :year group by date")
+	List<Tuple> agregatePostsByYear(@Param("year") Integer year);
+
+	/**
+	 * Метод findBestPosts.
+	 * Запрос на выборку всех активных, опубликованных ранее текущей даты постов с
+	 * сортировкой по убыванию количества лайков.
+	 *
+	 * @param pageable пагинация.
+	 * @return Page<Post>
+	 */
+	@Query("select post from Post post " +
+			"left join post.votes post_votes " +
+			"where post_votes.value = 1 " +
+			"and post.active = true " +
+			"and post.moderationStatus = 'ACCEPTED' " +
+			"and post.time <= CURRENT_TIMESTAMP " +
+			"group by post " +
+			"order by count(post_votes) desc")
+	Page<Post> findBestPosts(Pageable pageable);
+
+	/**
+	 * Метод findPopularPosts.
+	 * Запрос на выборку всех активных, опубликованных ранее текущей даты постов с
+	 * сортировкой по убыванию количества комментариев.
+	 *
+	 * @param pageable пагинация.
+	 * @return Page<Post>
+	 */
+	@Query("select post from Post post " +
+			"left join post.comments post_comments " +
+			"where post.active = true " +
+			"and post.moderationStatus = 'ACCEPTED' " +
+			"and post.time <= CURRENT_TIMESTAMP " +
+			"group by post " +
+			"order by count(post_comments) desc")
+	Page<Post> findPopularPosts(Pageable pageable);
 }

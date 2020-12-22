@@ -67,7 +67,7 @@ public class PostController {
 	public PostResponse getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
 										  @RequestParam(defaultValue = "20") int limit,
 										  @RequestParam String mode) throws EnumValueNotFoundException {
-		return postService.findAllPostsSorted(offset, limit, SortMode.fromValue(mode));
+		return postService.getPostsWithSortMode(offset, limit, SortMode.fromValue(mode));
 	}
 
 	/**

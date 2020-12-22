@@ -73,33 +73,58 @@ public class PostService {
     }
 
     /**
-     * Метод findAllPostsSorted
-     * Метод находити сортирует все посты, в соответствии с заданым режимом mode.
-     *
-     * @param offset   - сдвиг от 0 для постраничного вывода.
-     * @param limit    - количество постов, которое надо вывести.
-     * @param sortMode -  режим вывода (сортировка).
-     * @return - PostResponse.
+     * Метод getPostsWithSortMode.
+     * Формирует список постов для отображения в зависимости от заданного режима сортировки.
+     * @param offset сдвиг от 0 для постраничного вывода.
+     * @param limit количество постов, которое надо вывести.
+     * @param sortMode режим сортировки.
+     * @return PostResponse
      */
-    public PostResponse findAllPostsSorted(int offset, int limit, SortMode sortMode) {
-        Pageable pageable = PageRequest.of(offset / limit, limit);
+    public PostResponse getPostsWithSortMode (int offset, int limit, SortMode sortMode) {
+        Pageable defaultPageable = PageRequest.of(offset / limit, limit);
+        switch (sortMode) {
+            case EARLY:
+                return this.getPostsByTimeSorting(offset, limit, Sort.by("time").ascending());
+            case RECENT:
+                return this.getPostsByTimeSorting(offset, limit, Sort.by("time").descending());
+            case BEST:
+                Page<Post> voteSortedPosts = postRepository.findBestPosts(defaultPageable);
+                return this.createPostResponse(voteSortedPosts, true, false, false);
+            case POPULAR:
+                Page<Post> commentSortedPosts = postRepository.findPopularPosts(defaultPageable);
+                return this.createPostResponse(commentSortedPosts, true, false, false);
+        }
+        return PostResponse.builder().count(0).posts(new ArrayList<>()).build();
+    }
+
+    /**
+     * Метод getPostsByTimeSorting.
+     * Формирование списка постов, отсортированных по времени создания поста.
+     * @param offset сдвиг от 0 для постраничного вывода.
+     * @param limit количество постов, которое надо вывести.
+     * @param sort способ сортировки.
+     * @return PostResponse.
+     */
+    private PostResponse getPostsByTimeSorting (int offset, int limit, Sort sort) {
+        Pageable pageable = PageRequest.of(offset / limit, limit, sort);
         Page<Post> postPages = postRepository.findByModerationStatusAndActiveTrueAndTimeBefore(
                 ModerationStatus.ACCEPTED.name(), LocalDateTime.now(), pageable);
+        return this.createPostResponse(postPages, true, false, false);
+    }
+
+    /**
+     * Метод createPostResponse.
+     * Формирование ответа создержащего отсортированный список постов.
+     * @param postPages постраничный список постов.
+     * @param includeAnnounce включать в ответ аннотации постов.
+     * @param includeComments включать в ответ комментарии постов.
+     * @param includeTags включать в ответ тегои постов.
+     * @return PostResponse.
+     */
+    private PostResponse createPostResponse (Page<Post> postPages,
+                                             boolean includeAnnounce, boolean includeComments, boolean includeTags) {
         List<PostDto> postDtoList = postMapperHelper.mapPostList(postPages.getContent(),
-                true, false, false);
-        switch (sortMode) {
-            case POPULAR:
-                postDtoList.sort(Comparator.comparingLong(PostDto::getCommentCount).reversed());
-                break;
-            case BEST:
-                postDtoList.sort(Comparator.comparingLong(PostDto::getLikeCount).reversed());
-                break;
-            case EARLY:
-                postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp));
-                break;
-            default:
-                postDtoList.sort(Comparator.comparingLong(PostDto::getTimestamp).reversed());
-        }
+                includeAnnounce, includeComments, includeTags);
         return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
     }
 
@@ -117,10 +142,7 @@ public class PostService {
         Page<Post> postPages = postRepository
                 .findByModerationStatusAndActiveTrueAndTimeBeforeAndTextContainingIgnoreCase(
                         ModerationStatus.ACCEPTED.name(), LocalDateTime.now(), query, pageable);
-        List<PostDto> postDtoList = postMapperHelper.mapPostList(
-                postPages.getContent(), true, false, false
-        );
-        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
+        return this.createPostResponse(postPages, true, false, false);
     }
 
     /**
@@ -135,10 +157,7 @@ public class PostService {
     public PostResponse findPostsByDate(int offset, int limit, String date) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByDate(pageable, date);
-        List<PostDto> postDtoList = postMapperHelper.mapPostList(
-                postPages.getContent(), true, false, false
-        );
-        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
+        return this.createPostResponse(postPages, true, false, false);
     }
 
     /**
@@ -153,10 +172,7 @@ public class PostService {
     public PostResponse findByTag(int offset, int limit, String tag) {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         Page<Post> postPages = postRepository.findByTag(pageable, tag);
-        List<PostDto> postDtoList = postMapperHelper.mapPostList(
-                postPages.getContent(), true, false, false
-        );
-        return PostResponse.builder().count(postPages.getTotalElements()).posts(postDtoList).build();
+        return this.createPostResponse(postPages, true, false, false);
     }
 
     /**
