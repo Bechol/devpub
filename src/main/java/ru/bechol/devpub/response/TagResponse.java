@@ -14,7 +14,7 @@ public class TagResponse {
 
 	List<TagElement> tags;
 
-	@Getter
+	@Data
 	@Builder
 	@FieldDefaults(level = AccessLevel.PRIVATE)
 	public static class TagElement {

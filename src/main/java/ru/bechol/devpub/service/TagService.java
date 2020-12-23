@@ -27,66 +27,71 @@ import java.util.stream.Collectors;
 @Service
 public class TagService {
 
-    @Autowired
-    private TagRepository tagRepository;
-    @Autowired
-    private PostRepository postRepository;
+	@Autowired
+	private TagRepository tagRepository;
+	@Autowired
+	private PostRepository postRepository;
 
-    /**
-     * Метод findAllTagsByQuery.
-     * Формирование ответа для GET /api/tag.
-     *
-     * @param query - строка запроса для выборки тегов.
-     * @return ResponseEntity<TagResponse>.
-     */
-    public ResponseEntity<TagResponse> findAllTagsByQuery(String query) {
-        List<Tag> tagsByQuery = Strings.isNotEmpty(query) ? tagRepository.findByQuery(query) : tagRepository.findAll();
-        List<TagResponse.TagElement> tagsNodes = tagsByQuery.stream()
-                .peek(tag -> tag.getPosts().removeIf(this::checkPost))
-                .map(tag -> TagResponse.TagElement.builder()
-                        .name(tag.getName())
-                        .weight(tag.getPosts().size() > 0 ?
-                                tag.getPosts().size() / (float) postRepository.count() * 5 : 0)
-                        .build())
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(TagResponse.builder().tags(tagsNodes).build());
-    }
+	/**
+	 * Метод findAllTagsByQuery.
+	 * Формирование ответа для GET /api/tag.
+	 *
+	 * @param query - строка запроса для выборки тегов.
+	 * @return ResponseEntity<TagResponse>.
+	 */
+	public ResponseEntity<TagResponse> findAllTagsByQuery(String query) {
+		List<Tag> tagsByQuery = Strings.isNotEmpty(query) ? tagRepository.findByQuery(query) : tagRepository.findAll();
+		List<TagResponse.TagElement> tagsNodes = tagsByQuery.stream()
+				.peek(tag -> tag.getPosts().removeIf(post -> !checkPost(post)))
+				.map(tag -> TagResponse.TagElement.builder()
+						.name(tag.getName())
+						.weight(tag.getPosts().size() > 0 ? tag.getPosts().size() / (float) postRepository.count() : 0.1f)
+						.build()).collect(Collectors.toList()
+				);
+		tagsNodes.stream()
+				.max(Comparator.comparing(TagResponse.TagElement::getWeight))
+				.map(tagNode -> 1 / tagNode.getWeight())
+				.ifPresent(correctionFactor -> tagsNodes.forEach(
+						tagNode -> tagNode.setWeight(tagNode.getWeight() * correctionFactor))
+				);
+		return ResponseEntity.ok(TagResponse.builder().tags(tagsNodes).build());
+	}
 
-    /**
-     * Метод checkTags.
-     * Проверка существующих тегов и создание новых из полученной строки.
-     *
-     * @param tagNames -  строка с тегами через запятую.
-     * @return - коллекция тегов
-     */
-    public List<Tag> mapTags(List<String> tagNames) {
-        if (tagNames.size() == 0) {
-            return new ArrayList<>();
-        }
-        List<Tag> result = tagRepository.findByNameIn(tagNames);
-        List<Tag> newTags = new ArrayList<>();
-        if (result.size() > 0) {
-            List<String> existsTagNames = result.stream().map(Tag::getName).collect(Collectors.toList());
-            tagNames.stream()
-                    .filter(name -> !existsTagNames.contains(name))
-                    .map(name -> tagRepository.save(new Tag(name)))
-                    .forEach(newTags::add);
-        } else {
-            tagNames.stream().map(name -> tagRepository.save(new Tag(name))).forEach(newTags::add);
-        }
-        result.addAll(newTags);
-        return result;
-    }
+	/**
+	 * Метод checkTags.
+	 * Проверка существующих тегов и создание новых из полученной строки.
+	 *
+	 * @param tagNames -  строка с тегами через запятую.
+	 * @return - коллекция тегов
+	 */
+	public List<Tag> mapTags(List<String> tagNames) {
+		if (tagNames.size() == 0) {
+			return new ArrayList<>();
+		}
+		List<Tag> result = tagRepository.findByNameIn(tagNames);
+		List<Tag> newTags = new ArrayList<>();
+		if (result.size() > 0) {
+			List<String> existsTagNames = result.stream().map(Tag::getName).collect(Collectors.toList());
+			tagNames.stream()
+					.filter(name -> !existsTagNames.contains(name))
+					.map(name -> tagRepository.save(new Tag(name)))
+					.forEach(newTags::add);
+		} else {
+			tagNames.stream().map(name -> tagRepository.save(new Tag(name))).forEach(newTags::add);
+		}
+		result.addAll(newTags);
+		return result;
+	}
 
-    /**
-     * Метод checkPost.
-     * Проверка поста по критериям: активный, утвержден, время публикации не превышает текущее.
-     *
-     * @param post - пост, который необходимо проверить.
-     * @return true - если не соблюдены все условия проверки.
-     */
-    private boolean checkPost(Post post) {
-        return !(post.isActive() && post.getModerationStatus().equals("ACCEPTED") &&
-                post.getTime().isBefore(LocalDateTime.now()));
-    }
+	/**
+	 * Метод checkPost.
+	 * Проверка поста по критериям: активный, утвержден, время публикации не превышает текущее.
+	 *
+	 * @param post - пост, который необходимо проверить.
+	 * @return true - если не соблюдены все условия проверки.
+	 */
+	private boolean checkPost(Post post) {
+		return post.isActive() && post.getModerationStatus().equals("ACCEPTED")
+				&& post.getTime().isBefore(LocalDateTime.now());
+	}
 }
