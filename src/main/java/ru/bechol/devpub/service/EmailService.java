@@ -3,6 +3,7 @@ package ru.bechol.devpub.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.mail.javamail.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.service.aspect.Trace;
@@ -38,6 +39,7 @@ public class EmailService {
      * @param message - текст письма.
      */
     @Trace
+    @Async("asyncExecutor")
     public void send(String emailTo, String subject, String message) {
         try {
             MimeMessage mailMessage = mailSender.createMimeMessage();
