@@ -27,8 +27,6 @@ public class EmailSenderConfig {
 	String password;
 	@Value("${spring.mail.protocol}")
 	String protocol;
-	@Value("${mail-sender.debug}")
-	String debug;
 
 	@Bean
 	public JavaMailSender getMailSender() {

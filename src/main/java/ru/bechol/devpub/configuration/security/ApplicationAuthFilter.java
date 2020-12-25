@@ -21,6 +21,14 @@ import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.Collections;
 
+/**
+ * Класс ApplicationAuthFilter.
+ * Фильтр для обработки данных аутентификации пользователя.
+ *
+ * @author Oleg Bech
+ * @version 1.0
+ * @email oleg071984@gmail.com
+ */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -35,6 +43,15 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
 		this.postService = postService;
 	}
 
+	/**
+	 * Метод attemptAuthentication.
+	 * Попытка аутетунтификации пользователя.
+	 *
+	 * @param request  запрос на аутентификацию.
+	 * @param response ответ сервера с результатом аутентификации.
+	 * @return Authentication
+	 * @throws AuthenticationException если пользователь не прошел аутентификацию.
+	 */
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
 			throws AuthenticationException {
@@ -49,6 +66,16 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
 		}
 	}
 
+	/**
+	 * Метод successfulAuthentication.
+	 * Формирование ответа сервера в случае успешной аутентификации пользователя.
+	 *
+	 * @param request    запрос на аутентификацию.
+	 * @param response   сформированный ответ сервера.
+	 * @param chain      цепь фильтров.
+	 * @param authResult результат аутентификации с данными пользователя.
+	 * @throws IOException
+	 */
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
 											Authentication authResult) throws IOException {
@@ -58,6 +85,15 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
 		SecurityContextHolder.getContext().setAuthentication(authResult);
 	}
 
+	/**
+	 * Метод unsuccessfulAuthentication.
+	 * Формирование ответа сервера в случае неудачной аутентификации пользователя.
+	 *
+	 * @param request  запрос на аутентификацию.
+	 * @param response сформированный ответ сервера.
+	 * @param failed   исключение, возникшее в результате проверки данных пользователя.
+	 * @throws IOException
+	 */
 	@Override
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 											  AuthenticationException failed) throws IOException {
@@ -65,6 +101,14 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
 				.writeValueAsString(Response.builder().result(false).build()));
 	}
 
+	/**
+	 * Метод createLoginResponse.
+	 * Конвертация результата аутентификации в ответ сервера.
+	 *
+	 * @param user                 авторизованный пользователь.
+	 * @param authenticationResult данные аутентификации.
+	 * @return объект для сериализации в Json.
+	 */
 	private Response<?> createLoginResponse(User user, Authentication authenticationResult) {
 		return Response.builder()
 				.result(authenticationResult.isAuthenticated())
@@ -78,6 +122,14 @@ public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter 
 						.settings(user.isModerator()).build()).build();
 	}
 
+	/**
+	 * Внутсренний статический класс UserCredentials.
+	 * Служит для десериализации данных, введеных пользователем на форме аутентификации.
+	 *
+	 * @author Oleg Bech
+	 * @version 1.0
+	 * @email oleg071984@gmail.com
+	 */
 	@Data
 	@FieldDefaults(level = AccessLevel.PRIVATE)
 	private static class UserCredentials {

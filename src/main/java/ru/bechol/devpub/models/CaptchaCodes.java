@@ -1,6 +1,7 @@
 package ru.bechol.devpub.models;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * Класс CaptchaCodes.
- * Реализация сущности кода капчи.
+ * Доменный объект, представляющий код капчи.
  *
  * @author Oleg Bech
  * @version 1.0
@@ -17,19 +18,17 @@ import java.time.LocalDateTime;
  * @see ru.bechol.devpub.service.CaptchaCodesService
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "captcha_codes")
-public class CaptchaCodes {
+public class CaptchaCodes extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @UpdateTimestamp
-    @Column(columnDefinition = "timestamp with time zone", nullable = false)
-    private LocalDateTime time;
-    @Column(nullable = false)
-    private String code;
-    @Column(name = "secret_code", nullable = false)
-    private String secretCode;
+	@UpdateTimestamp
+	@Column(columnDefinition = "timestamp with time zone", nullable = false)
+	LocalDateTime time;
+	@Column(nullable = false)
+	String code;
+	@Column(name = "secret_code", nullable = false)
+	String secretCode;
 
 }

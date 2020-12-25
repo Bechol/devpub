@@ -1,16 +1,15 @@
 package ru.bechol.devpub.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
 import java.util.Set;
 
 /**
  * Класс Tag.
- * Реализация тега.
+ * Доменный объект, представляющий тег поста.
  *
  * @author Oleg Bech.
  * @version 1.0
@@ -23,21 +22,20 @@ import java.util.Set;
  */
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "tags")
 @NoArgsConstructor
-public class Tag {
+public class Tag extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @Column(nullable = false)
-    private String name;
-    @JsonBackReference
-    @ManyToMany(mappedBy = "tags")
-    private Set<Post> posts;
+	@Column(nullable = false)
+	String name;
 
-    public Tag(String name) {
-        this.name = name;
-    }
+	@JsonBackReference
+	@ManyToMany(mappedBy = "tags")
+	Set<Post> posts;
+
+	public Tag(String name) {
+		this.name = name;
+	}
 }

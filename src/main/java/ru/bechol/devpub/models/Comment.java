@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * Класс Comment.
- * Реализация комментария.
- * Таблица post_comments.
+ * Доменный объект, представляющий комментарий.
  *
  * @author Oleg Bech
  * @email oleg071984@gmail.com
@@ -25,26 +24,27 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "post_comments")
-public class Comment {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	long id;
+public class Comment extends BaseEntity {
 
-	@OneToOne
-	@JoinColumn(name = "parent_id")
-	@JsonInclude(value = JsonInclude.Include.NON_NULL)
-	Comment parent;
-	@JsonBackReference
-	@ManyToOne
-	@JoinColumn(name = "post_id", nullable = false)
-	Post post;
-	@ManyToOne
-	@JoinColumn(name = "user_id", nullable = false)
-	User user;
 	@CreationTimestamp
 	@Column(name = "comment_time", nullable = false, columnDefinition = "timestamp")
 	LocalDateTime time;
 	@Column(name = "comment_text", nullable = false)
 	String text;
+
+	@OneToOne
+	@JoinColumn(name = "parent_id")
+	@JsonInclude(value = JsonInclude.Include.NON_NULL)
+	Comment parent;
+
+	@JsonBackReference
+	@ManyToOne
+	@JoinColumn(name = "post_id", nullable = false)
+	Post post;
+
+	@ManyToOne
+	@JoinColumn(name = "user_id", nullable = false)
+	User user;
+
 
 }
