@@ -1,11 +1,11 @@
 package ru.bechol.devpub.service;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.mail.javamail.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.service.aspect.Trace;
 
 import javax.mail.MessagingException;
@@ -19,49 +19,38 @@ import javax.mail.internet.MimeMessage;
  * @email Oleg071984@gmail.com
  * @see ru.bechol.devpub.configuration.mail.EmailSenderConfig
  */
-@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
 public class EmailService {
 
-    @Value("${mail-sender.sender-name}")
-    private String username;
-    @Autowired
-    private JavaMailSender mailSender;
-    @Autowired
-    private Messages messages;
+	@Value("${mail-sender.sender-name}")
+	String senderName;
+	@Autowired
+	JavaMailSender mailSender;
+	@Autowired
+	Messages messages;
 
-    /**
-     * Метод send.
-     * Отправка писем.
-     *
-     * @param emailTo - email получателя.
-     * @param subject - тема письма.
-     * @param message - текст письма.
-     */
-    @Trace
-    @Async("asyncExecutor")
-    public void send(String emailTo, String subject, String message) {
-        try {
-            MimeMessage mailMessage = mailSender.createMimeMessage();
-            boolean multipart = false;
-            MimeMessageHelper helper = null;
-            helper = new MimeMessageHelper(mailMessage, multipart);
-            helper.setFrom(username);
-            helper.setTo(emailTo);
-            helper.setSubject(subject);
-            mailMessage.setContent(message, "text/html; charset=UTF-8");
-            mailSender.send(mailMessage);
-        } catch (MessagingException messagingException) {
-            log.warn(messagingException.getMessage());
-            messagingException.printStackTrace();
-        }
-    }
-
-    public void send(Post post) {
-        log.info("send notification email to moderator [{}]",  post.getModerator().getEmail());
-        this.send(post.getModerator().getEmail(),
-                messages.getMessage("post.moderation-mail-subject"),
-                messages.getMessage("post.moderation-mail", post.getModerator().getName())
-        );
-    }
+	/**
+	 * Метод send.
+	 * Отправка писем.
+	 *
+	 * @param emailTo - email получателя.
+	 * @param subject - тема письма.
+	 * @param message - текст письма.
+	 */
+	@Trace
+	@Async("asyncExecutor")
+	public void send(String emailTo, String subject, String message) {
+		try {
+			MimeMessage mailMessage = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true);
+			helper.setFrom(senderName);
+			helper.setTo(emailTo);
+			helper.setSubject(subject);
+			mailMessage.setContent(message, "text/html; charset=UTF-8");
+			mailSender.send(mailMessage);
+		} catch (MessagingException messagingException) {
+			messagingException.printStackTrace();
+		}
+	}
 }

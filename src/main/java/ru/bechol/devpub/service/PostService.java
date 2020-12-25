@@ -260,7 +260,9 @@ public class PostService {
 	private void savePost(Post post) {
         Optional.of(postRepository.save(post)).ifPresent(savedPost -> {
                     if (post.isActive() && savedPost.getModerationStatus().equals("NEW")) {
-                        emailService.send(savedPost);
+                        emailService.send(post.getModerator().getEmail(),
+								messages.getMessage("post.moderation-mail-subject"),
+								messages.getMessage("post.moderation-mail", post.getModerator().getName()));
                     }
                 });
     }

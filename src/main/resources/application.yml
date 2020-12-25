@@ -25,7 +25,6 @@ spring:
       max-request-size: ${MAX_REQUEST_SIZE:5MB}
 
 mail-sender:
-  debug: true
   sender-name: ${MAIL_SENDER_NAME}
 
 async-executor:
