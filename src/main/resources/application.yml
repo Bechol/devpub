@@ -28,6 +28,13 @@ mail-sender:
   debug: true
   sender-name: ${MAIL_SENDER_NAME}
 
+async-executor:
+  thread-pool:
+    corePoolSize: 2
+    maxPoolSize: 4
+    queueCapacity: 10
+    threadNamePrefix: async-pool-
+
 #FLYWAY
 flyway:
   user: ${JDBC_DATABASE_USERNAME}
