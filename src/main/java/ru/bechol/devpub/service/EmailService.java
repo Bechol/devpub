@@ -1,13 +1,10 @@
 package ru.bechol.devpub.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.mail.javamail.*;
 import org.springframework.stereotype.Service;
-import ru.bechol.devpub.event.DevpubAppEvent;
+import ru.bechol.devpub.models.Post;
 import ru.bechol.devpub.service.aspect.Trace;
 
 import javax.mail.MessagingException;
@@ -30,7 +27,7 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+    private Messages messages;
 
     /**
      * Метод send.
@@ -51,12 +48,18 @@ public class EmailService {
             helper.setTo(emailTo);
             helper.setSubject(subject);
             mailMessage.setContent(message, "text/html; charset=UTF-8");
-            applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
-                    this, mailMessage, DevpubAppEvent.EventType.SEND_MAIL
-            ));
+            mailSender.send(mailMessage);
         } catch (MessagingException messagingException) {
             log.warn(messagingException.getMessage());
             messagingException.printStackTrace();
         }
+    }
+
+    public void send(Post post) {
+        log.info("send notification email to moderator [{}]",  post.getModerator().getEmail());
+        this.send(post.getModerator().getEmail(),
+                messages.getMessage("post.moderation-mail-subject"),
+                messages.getMessage("post.moderation-mail", post.getModerator().getName())
+        );
     }
 }

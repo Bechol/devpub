@@ -4,10 +4,8 @@ import com.github.cage.Cage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import ru.bechol.devpub.controller.DefaultController;
-import ru.bechol.devpub.event.DevpubAppEvent;
 import ru.bechol.devpub.models.CaptchaCodes;
 import ru.bechol.devpub.repository.CaptchaCodesRepository;
 import ru.bechol.devpub.response.CaptchaResponse;
@@ -37,8 +35,6 @@ public class CaptchaCodesService {
     private Cage cage;
     @Autowired
     private CaptchaCodesRepository captchaCodesRepository;
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
     @Value("${captcha.storage-limit}")
     private int storageLimit;
 
@@ -54,9 +50,7 @@ public class CaptchaCodesService {
     public CaptchaResponse generateCaptcha() throws IOException {
         CaptchaResponse captchaResponse = createResponse();
         this.saveCaptchaInfo(captchaResponse);
-        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
-                this, LocalDateTime.now().minusHours(storageLimit), DevpubAppEvent.EventType.DELETE_CAPTCHA
-        ));
+        captchaCodesRepository.deleteByTimeBefore(LocalDateTime.now().minusHours(storageLimit));
         return captchaResponse;
     }
 
@@ -109,8 +103,6 @@ public class CaptchaCodesService {
         CaptchaCodes captchaCodes = new CaptchaCodes();
         captchaCodes.setCode(captchaResponse.getCode());
         captchaCodes.setSecretCode(captchaResponse.getSecret());
-        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
-                this, captchaCodes, DevpubAppEvent.EventType.SAVE_CAPTCHA
-        ));
+        captchaCodesRepository.save(captchaCodes);
     }
 }

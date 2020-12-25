@@ -262,7 +262,6 @@ public class PostController {
 	 * @param editPostRequest - тело запроса.
 	 * @param bindingResult   - результаты валидации данных пользовательской формы.
 	 * @param postId          - id поста.
-	 * @param principal       - авторизованный пользователь.
 	 * @return ResponseEntity<Response>.
 	 */
 	@Operation(summary = "Редактирование поста", description = "Метод изменяет данные поста с идентификатором ID на те, " +
@@ -290,8 +289,8 @@ public class PostController {
 	})
 	@PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
-									  @PathVariable("id") long postId, Principal principal) throws Exception {
-		return postService.editPost(editPostRequest, postId, principal, bindingResult);
+									  @PathVariable("id") long postId) throws Exception {
+		return postService.editPost(editPostRequest, postId, bindingResult);
 	}
 
 

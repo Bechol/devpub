@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import ru.bechol.devpub.event.DevpubAppEvent;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.models.*;
 import ru.bechol.devpub.repository.*;
@@ -95,9 +94,8 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setName(registerRequest.getName());
         user.setModerator(false);
-        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
-                this, this.setUserRole(user), DevpubAppEvent.EventType.SAVE_USER
-        ));
+        this.setUserRole(user);
+        userRepository.save(user);
         return ResponseEntity.ok(RESULT_TRUE_MAP);
     }
 
@@ -199,9 +197,7 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user != null) {
             user.setForgotCode(UUID.randomUUID().toString());
-            applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
-                    this, user, DevpubAppEvent.EventType.SAVE_USER
-            ));
+            userRepository.save(user);
             emailService.send(user.getEmail(), messages.getMessage("rp.mail-subject"),
                     messages.getMessage(
                             "rp.message-text", user.getName(), createRestorePasswordLink(user.getForgotCode())
@@ -248,9 +244,7 @@ public class UserService implements UserDetailsService {
         }
         user.setPassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
         user.setForgotCode(null);
-        applicationEventPublisher.publishEvent(new DevpubAppEvent<>(
-                this, user, DevpubAppEvent.EventType.SAVE_USER
-        ));
+        userRepository.save(user);
         return ResponseEntity.ok().body(Map.of("result", true));
     }
 
