@@ -5,6 +5,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import ru.bechol.devpub.models.*;
@@ -257,7 +258,8 @@ public class PostService {
      * Сохранение поста и при необходимости отправка уведомления модератору.
      * @param post пост, который необходимо сохранить,
      */
-	private void savePost(Post post) {
+	@Async("asyncExecutor")
+	public void savePost(Post post) {
         Optional.of(postRepository.save(post)).ifPresent(savedPost -> {
                     if (post.isActive() && savedPost.getModerationStatus().equals("NEW")) {
                         emailService.send(post.getModerator().getEmail(),

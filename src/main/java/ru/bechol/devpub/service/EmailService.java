@@ -20,6 +20,7 @@ import javax.mail.internet.MimeMessage;
  * @see ru.bechol.devpub.configuration.mail.EmailSenderConfig
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Async("asyncExecutor")
 @Service
 public class EmailService {
 
@@ -39,7 +40,6 @@ public class EmailService {
 	 * @param message - текст письма.
 	 */
 	@Trace
-	@Async("asyncExecutor")
 	public void send(String emailTo, String subject, String message) {
 		try {
 			MimeMessage mailMessage = mailSender.createMimeMessage();
