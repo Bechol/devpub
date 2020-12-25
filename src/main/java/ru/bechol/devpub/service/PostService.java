@@ -400,7 +400,29 @@ public class PostService {
 		}
 		post.setModeratedBy(activeUser);
 		postRepository.save(post);
+		this.sendModerationResult(post);
 		return Response.builder().result(true).build();
+	}
+
+	/**
+	 * Метод sendModerationResult.
+	 * Отправка итогов модерации автору поста.
+	 * @param post пост
+	 */
+	private void sendModerationResult(Post post) {
+		if (post.getModerationStatus().equalsIgnoreCase("accepted")) {
+			emailService.send(post.getUser().getEmail(),
+					messages.getMessage("post.moderation-accepted-mail-subject"),
+					messages.getMessage("post.moderation-accepted-mail-text",
+							post.getUser().getName(), post.getTitle())
+			);
+		} else {
+			emailService.send(post.getUser().getEmail(),
+					messages.getMessage("post.moderation-declined-mail-subject"),
+					messages.getMessage("post.moderation-declined-mail-text",
+							post.getUser().getName(), post.getTitle())
+			);
+		}
 	}
 
 	/**
