@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import ru.bechol.devpub.repository.IVoteRepository;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -15,8 +16,8 @@ import java.time.LocalDateTime;
  * @author Oleg Bech.
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.VoteRepository
- * @see ru.bechol.devpub.service.VoteService
+ * @see IVoteRepository
+ * @see ru.bechol.devpub.service.IVoteService
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

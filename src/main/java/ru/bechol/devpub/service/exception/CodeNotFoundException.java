@@ -9,7 +9,7 @@ package ru.bechol.devpub.service.exception;
  */
 public class CodeNotFoundException extends Exception {
 
-    public CodeNotFoundException(String message) {
-        super(message);
-    }
+	public CodeNotFoundException(String message) {
+		super(message);
+	}
 }

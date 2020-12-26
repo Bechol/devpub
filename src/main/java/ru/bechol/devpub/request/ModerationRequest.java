@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.controller.ModerationController
- * @see ru.bechol.devpub.service.PostService
+ * @see ru.bechol.devpub.service.IPostService
  */
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

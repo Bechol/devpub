@@ -8,7 +8,7 @@ import java.io.IOException;
 
 /**
  * Класс AppLogoutHandler.
- * Обработчик успешного выхода пользователя.
+ * Обработчик обработчика logout.
  *
  * @author Oleg Bech
  * @version 1.0

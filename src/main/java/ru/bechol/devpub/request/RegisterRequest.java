@@ -14,7 +14,7 @@ import javax.validation.constraints.NotEmpty;
  * @author Oleg Bech
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.controller.ApiAuthController
- * @see ru.bechol.devpub.service.UserService
+ * @see ru.bechol.devpub.service.IUserService
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)

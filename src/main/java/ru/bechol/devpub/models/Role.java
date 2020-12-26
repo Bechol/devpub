@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.GrantedAuthority;
+import ru.bechol.devpub.repository.IRoleRepository;
 
 import javax.persistence.*;
 import java.util.List;
@@ -15,8 +16,8 @@ import java.util.List;
  * @author Oleg Bech.
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.RoleRepository
- * @see ru.bechol.devpub.service.RoleService
+ * @see IRoleRepository
+ * @see ru.bechol.devpub.service.IRoleService
  * @see ru.bechol.devpub.controller.ApiAuthController
  */
 @Getter

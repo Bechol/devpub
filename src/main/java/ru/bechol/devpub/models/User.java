@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import ru.bechol.devpub.repository.IUserRepository;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -18,8 +19,8 @@ import java.util.*;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.UserRepository
- * @see ru.bechol.devpub.service.UserService
+ * @see IUserRepository
+ * @see ru.bechol.devpub.service.IUserService
  */
 @Getter
 @Setter

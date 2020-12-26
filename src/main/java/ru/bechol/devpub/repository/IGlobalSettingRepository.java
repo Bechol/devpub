@@ -14,17 +14,17 @@ import java.util.Optional;
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see GlobalSetting
- * @see ru.bechol.devpub.service.GlobalSettingsService
+ * @see ru.bechol.devpub.service.IGlobalSettingsService
  */
 @Repository
-public interface GlobalSettingRepository extends JpaRepository<GlobalSetting, Long> {
+public interface IGlobalSettingRepository extends JpaRepository<GlobalSetting, Long> {
 
-    /**
-     * Метод findByCode.
-     * Поиск по полю code.
-     *
-     * @param code - код настройки.
-     * @return - Optional<GlobalSetting>.
-     */
-    Optional<GlobalSetting> findByCode(String code);
+	/**
+	 * Метод findByCode.
+	 * Поиск по полю code.
+	 *
+	 * @param code - код настройки.
+	 * @return - Optional<GlobalSetting>.
+	 */
+	Optional<GlobalSetting> findByCode(String code);
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,7 +13,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.response.Response;
 import ru.bechol.devpub.response.dto.UserDto;
-import ru.bechol.devpub.service.PostService;
+import ru.bechol.devpub.service.*;
 import ru.bechol.devpub.service.enums.ModerationStatus;
 
 import javax.servlet.FilterChain;
@@ -33,10 +33,11 @@ import java.util.Collections;
 public class ApplicationAuthFilter extends UsernamePasswordAuthenticationFilter {
 
 	AuthenticationManager authenticationManager;
-	PostService postService;
+	IPostService postService;
 
 	@Autowired
-	public ApplicationAuthFilter(AuthenticationManager authenticationManager, PostService postService) {
+	public ApplicationAuthFilter(AuthenticationManager authenticationManager,
+								 @Qualifier("postService") IPostService postService) {
 		this.authenticationManager = authenticationManager;
 		this.setRequiresAuthenticationRequestMatcher(
 				new AntPathRequestMatcher("/api/auth/login", "POST"));

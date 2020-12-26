@@ -2,7 +2,7 @@ package ru.bechol.devpub.configuration.security;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.bechol.devpub.service.*;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Класс SecurityConfig.
@@ -28,17 +30,22 @@ import ru.bechol.devpub.service.*;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
-	UserService userDetailsService;
-	@Autowired
 	PasswordEncoder passwordEncoder;
 	@Autowired
-	PostService postService;
+	@Qualifier("userService")
+	IUserService userDetailsService;
+	@Autowired
+	@Qualifier("postService")
+	IPostService postService;
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 
 		http
 				.csrf().disable()
+				.exceptionHandling().authenticationEntryPoint(
+						(req, rsp, e) -> rsp.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+				.and()
 				.addFilterBefore(new ApplicationAuthFilter(super.authenticationManagerBean(), postService),
 						UsernamePasswordAuthenticationFilter.class)
 				.authorizeRequests()

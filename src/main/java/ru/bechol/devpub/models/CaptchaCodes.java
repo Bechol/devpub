@@ -3,6 +3,8 @@ package ru.bechol.devpub.models;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.UpdateTimestamp;
+import ru.bechol.devpub.repository.ICaptchaCodesRepository;
+import ru.bechol.devpub.service.impl.CaptchaCodesService;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -14,8 +16,8 @@ import java.time.LocalDateTime;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.CaptchaCodesRepository
- * @see ru.bechol.devpub.service.CaptchaCodesService
+ * @see ICaptchaCodesRepository
+ * @see CaptchaCodesService
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

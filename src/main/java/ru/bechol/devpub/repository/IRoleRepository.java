@@ -7,17 +7,17 @@ import ru.bechol.devpub.models.Role;
 import java.util.Optional;
 
 /**
- * Класс RoleRepository.
+ * Класс IRoleRepository.
  * Реализация слоя доступа к данным для Role.
  *
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see Role
- * @see ru.bechol.devpub.service.RoleService
+ * @see ru.bechol.devpub.service.IRoleService
  */
 @Repository
-public interface RoleRepository extends JpaRepository<Role, Long> {
+public interface IRoleRepository extends JpaRepository<Role, Long> {
 
     /**
      * Метод findByName.

@@ -2,6 +2,7 @@ package ru.bechol.devpub.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.service.impl.CommentService;
 
 import javax.validation.constraints.Size;
 
@@ -13,7 +14,7 @@ import javax.validation.constraints.Size;
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.controller.CommentController
- * @see ru.bechol.devpub.service.CommentService
+ * @see CommentService
  */
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

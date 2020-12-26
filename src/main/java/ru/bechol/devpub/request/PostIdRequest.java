@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
  * @author Oleg Bech
  * @version 1.0
  * @see ru.bechol.devpub.controller.PostController
- * @see ru.bechol.devpub.service.VoteService
+ * @see ru.bechol.devpub.service.IVoteService
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

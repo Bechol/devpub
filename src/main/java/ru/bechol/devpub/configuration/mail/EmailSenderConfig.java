@@ -12,7 +12,7 @@ import org.springframework.mail.javamail.*;
  *
  * @author Oleg Bech
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.service.EmailService
+ * @see ru.bechol.devpub.service.IEmailService
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EmailSenderConfig {
