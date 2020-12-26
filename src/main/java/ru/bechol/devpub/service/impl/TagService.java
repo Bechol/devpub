@@ -1,13 +1,16 @@
-package ru.bechol.devpub.service;
+package ru.bechol.devpub.service.impl;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import ru.bechol.devpub.models.*;
 import ru.bechol.devpub.repository.*;
 import ru.bechol.devpub.response.TagResponse;
+import ru.bechol.devpub.service.ITagService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -21,16 +24,17 @@ import java.util.stream.Collectors;
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.models.Tag
- * @see TagRepository
+ * @see ITagRepository
  */
 @Slf4j
-@Service
-public class TagService {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Component
+public class TagService implements ITagService {
 
 	@Autowired
-	private TagRepository tagRepository;
+	ITagRepository tagRepository;
 	@Autowired
-	private PostRepository postRepository;
+	IPostRepository postRepository;
 
 	/**
 	 * Метод findAllTagsByQuery.
@@ -39,6 +43,7 @@ public class TagService {
 	 * @param query - строка запроса для выборки тегов.
 	 * @return ResponseEntity<TagResponse>.
 	 */
+	@Override
 	public ResponseEntity<TagResponse> findAllTagsByQuery(String query) {
 		List<Tag> tagsByQuery = Strings.isNotEmpty(query) ? tagRepository.findByQuery(query) : tagRepository.findAll();
 		List<TagResponse.TagElement> tagsNodes = tagsByQuery.stream()
@@ -64,6 +69,7 @@ public class TagService {
 	 * @param tagNames -  строка с тегами через запятую.
 	 * @return - коллекция тегов
 	 */
+	@Override
 	public List<Tag> mapTags(List<String> tagNames) {
 		if (tagNames.size() == 0) {
 			return new ArrayList<>();

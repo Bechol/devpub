@@ -1,10 +1,8 @@
 package ru.bechol.devpub.configuration;
 
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.info.Info;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 
 /**
  * Класс OpenApiConfig.
@@ -17,11 +15,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .components(new Components())
-                .info(new Info().title("Skillbox Devpub API").description(
-                        "Описание API для работы с блогом. Дипломный проект Skillbox"));
-    }
+	@Bean
+	public OpenAPI customOpenAPI() {
+		return new OpenAPI()
+				.components(new Components())
+				.info(new Info().title("Skillbox Devpub API").description(
+						"Описание API для работы с блогом. Дипломный проект Skillbox"));
+	}
 }

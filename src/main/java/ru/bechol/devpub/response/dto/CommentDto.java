@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.bechol.devpub.response.PostResponse;
+import ru.bechol.devpub.service.impl.CommentService;
 
 /**
  * Класс CommentDto.
@@ -12,7 +13,7 @@ import ru.bechol.devpub.response.PostResponse;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.service.CommentService
+ * @see CommentService
  * @see ru.bechol.devpub.models.Comment
  * @see PostDto
  * @see PostResponse

@@ -1,6 +1,7 @@
 package ru.bechol.devpub.service.exception;
 
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 /**
@@ -10,15 +11,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
  * @author Oleg Bech
  * @email oleg071984@gmail.com
  */
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 public class UserNotFoundException extends UsernameNotFoundException {
 
-    private String field;
-    private String fieldValue;
+	String field;
+	String fieldValue;
 
-    public UserNotFoundException(String msg, String searchByField, String searchValue) {
-        super(msg);
-        this.field = searchByField;
-        this.fieldValue = searchValue;
-    }
+	public UserNotFoundException(String msg, String searchByField, String searchValue) {
+		super(msg);
+		this.field = searchByField;
+		this.fieldValue = searchValue;
+	}
 }

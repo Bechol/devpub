@@ -6,23 +6,24 @@ import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.bechol.devpub.models.User;
 import ru.bechol.devpub.request.*;
 import ru.bechol.devpub.response.PostResponse;
 import ru.bechol.devpub.response.dto.PostDto;
 import ru.bechol.devpub.service.*;
 import ru.bechol.devpub.service.enums.*;
-import ru.bechol.devpub.service.exception.*;
 
 import javax.validation.Valid;
-import java.security.Principal;
 
 /**
  * Класс PostController.
- * REST контроллер для обычных запросов не через /api/post.
+ * REST контроллер.
  *
  * @author Oleg Bech
  * @version 1.0
@@ -34,9 +35,11 @@ import java.security.Principal;
 public class PostController {
 
 	@Autowired
-	PostService postService;
+	@Qualifier("postService")
+	IPostService postService;
 	@Autowired
-	VoteService voteService;
+	@Qualifier("voteService")
+	IVoteService voteService;
 
 	/**
 	 * Метод getAllPostsSorted.
@@ -66,7 +69,7 @@ public class PostController {
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public PostResponse getAllPostsSorted(@RequestParam(defaultValue = "0") int offset,
 										  @RequestParam(defaultValue = "20") int limit,
-										  @RequestParam String mode) throws EnumValueNotFoundException {
+										  @RequestParam String mode) throws Exception {
 		return postService.getPostsWithSortMode(offset, limit, SortMode.fromValue(mode));
 	}
 
@@ -174,10 +177,12 @@ public class PostController {
 			@ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MODERATOR')")
 	@GetMapping(value = "/my", produces = MediaType.APPLICATION_JSON_VALUE)
-	public PostResponse findActiveUserPosts(Principal user, @RequestParam(defaultValue = "0") int offset,
+	public PostResponse findActiveUserPosts(@AuthenticationPrincipal User user,
+											@RequestParam(defaultValue = "0") int offset,
 											@RequestParam(defaultValue = "0") int limit,
-											@RequestParam String status) throws EnumValueNotFoundException {
+											@RequestParam String status) throws Exception {
 		return postService.findActiveUserPosts(user, offset, limit, PostStatus.fromValue(status));
 	}
 
@@ -193,7 +198,7 @@ public class PostController {
 	 *
 	 * @param postRequest   - json для создания поста.
 	 * @param bindingResult - результат валидации данных нового поста.
-	 * @param principal     - авторизованный пользователь.
+	 * @param user          - авторизованный пользователь.
 	 * @return PostResponse.
 	 */
 	@Operation(summary = "Создание нового поста", description = "В случае, если заголовок или текст поста не установлены " +
@@ -217,10 +222,11 @@ public class PostController {
 			@ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MODERATOR')")
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> createNewPost(@Valid @RequestBody PostRequest postRequest, BindingResult bindingResult,
-										   Principal principal) throws Exception {
-		return postService.createNewPost(principal, postRequest, bindingResult);
+										   @AuthenticationPrincipal User user) throws Exception {
+		return postService.createNewPost(user, postRequest, bindingResult);
 	}
 
 	/**
@@ -231,8 +237,8 @@ public class PostController {
 	 * (параметр is_active в базе данных равен 1), принят модератором (параметр moderation_status равен ACCEPTED) и
 	 * время его публикации (поле timestamp) равно текущему времени или меньше его.
 	 *
-	 * @param postId    - id поста.
-	 * @param principal - авторизованный пользователь.
+	 * @param postId - id поста.
+	 * @param user   - авторизованный пользователь.
 	 * @return ResponseEntity<Response>.
 	 */
 	@Operation(summary = "Данные конкретного поста", description = "Метод выводит данные конкретного поста для " +
@@ -250,8 +256,9 @@ public class PostController {
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
 	@GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public PostDto showPost(@PathVariable(name = "id") long postId, Principal principal) throws PostNotFoundException {
-		return postService.showPost(postId, principal);
+	public PostDto showPost(@PathVariable(name = "id") long postId, @AuthenticationPrincipal User user)
+			throws Exception {
+		return postService.showPost(postId, user);
 	}
 
 	/**
@@ -287,12 +294,12 @@ public class PostController {
 			@ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MODERATOR')")
 	@PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> editPost(@Valid @RequestBody PostRequest editPostRequest, BindingResult bindingResult,
 									  @PathVariable("id") long postId) throws Exception {
 		return postService.editPost(editPostRequest, postId, bindingResult);
 	}
-
 
 	/**
 	 * Метод postsOnModeration
@@ -301,10 +308,10 @@ public class PostController {
 	 * или над которыми мною были совершены модерационные действия: которые я отклонил или утвердил
 	 * (это определяется полями moderation_status и moderator_id в таблице posts базы данных).
 	 *
-	 * @param offset    - сдвиг от 0 для постраничного вывода.
-	 * @param limit     - количество постов, которое надо вывести.
-	 * @param status    -  статус модерации.
-	 * @param principal - авторизованный пользователь
+	 * @param offset - сдвиг от 0 для постраничного вывода.
+	 * @param limit  - количество постов, которое надо вывести.
+	 * @param status -  статус модерации.
+	 * @param user   - авторизованный пользователь
 	 * @return - PostResponse.
 	 */
 	@Operation(summary = "Посты, которые требуют модерационных действий", description = "Метод выводит все посты, " +
@@ -320,11 +327,12 @@ public class PostController {
 			@ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
+	@PreAuthorize("hasRole('ROLE_MODERATOR')")
 	@GetMapping(value = "/moderation", produces = MediaType.APPLICATION_JSON_VALUE)
 	public PostResponse postsOnModeration(@RequestParam int offset, @RequestParam int limit,
-										  @RequestParam String status, Principal principal)
-			throws EnumValueNotFoundException {
-		return postService.findPostsOnModeration(principal, offset, limit, status);
+										  @RequestParam String status, @AuthenticationPrincipal User user)
+			throws Exception {
+		return postService.findPostsOnModeration(user, offset, limit, status);
 	}
 
 	/**
@@ -334,8 +342,8 @@ public class PostController {
 	 * В случае повторного лайка возвращает {result: false}. Если до этого этот же пользователь поставил на этот
 	 * же пост дизлайк, этот дизлайк должен быть заменен на лайк в базе данных.
 	 *
-	 * @param postIdRequest - id поста для лайка.
-	 * @param principal     - авторизованный пользователь
+	 * @param postIdRequest id поста для лайка.
+	 * @param user          авторизованный пользователь
 	 * @return - Response.
 	 */
 	@Operation(summary = "Лайк текущего авторизованного пользователя", description = "В случае повторного лайка " +
@@ -355,10 +363,11 @@ public class PostController {
 			@ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MODERATOR')")
 	@PostMapping(value = "/like", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> likePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
-			throws PostNotFoundException {
-		return voteService.vote(postIdRequest, principal, 1);
+	public ResponseEntity<?> likePost(@RequestBody PostIdRequest postIdRequest, @AuthenticationPrincipal User user)
+			throws Exception {
+		return voteService.vote(postIdRequest, user, 1);
 	}
 
 	/**
@@ -370,7 +379,7 @@ public class PostController {
 	 * этот лайк должен заменен на дизлайк в базе данных.
 	 *
 	 * @param postIdRequest - id поста для лайка.
-	 * @param principal     - авторизованный пользователь
+	 * @param user          - авторизованный пользователь
 	 * @return - Response.
 	 */
 	@Operation(summary = "Дизлайк текущего авторизованного пользователя", description = "В случае повторного дизлайка " +
@@ -390,9 +399,10 @@ public class PostController {
 			@ApiResponse(responseCode = "403", description = "Пользователь не авторизован",
 					content = {@Content(schema = @Schema(hidden = true))})
 	})
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MODERATOR')")
 	@PostMapping(value = "/dislike", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> dislikePost(@RequestBody PostIdRequest postIdRequest, Principal principal)
-			throws PostNotFoundException {
-		return voteService.vote(postIdRequest, principal, - 1);
+	public ResponseEntity<?> dislikePost(@RequestBody PostIdRequest postIdRequest, @AuthenticationPrincipal User user)
+			throws Exception {
+		return voteService.vote(postIdRequest, user, -1);
 	}
 }

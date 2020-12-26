@@ -2,7 +2,7 @@ package ru.bechol.devpub.configuration.security;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -28,11 +28,13 @@ import ru.bechol.devpub.service.*;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
-	UserService userDetailsService;
-	@Autowired
 	PasswordEncoder passwordEncoder;
 	@Autowired
-	PostService postService;
+	@Qualifier("userService")
+	IUserService userDetailsService;
+	@Autowired
+	@Qualifier("postService")
+	IPostService postService;
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {

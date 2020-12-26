@@ -12,7 +12,7 @@ import ru.bechol.devpub.response.PostResponse;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.service.UserService
+ * @see ru.bechol.devpub.service.IUserService
  * @see PostResponse
  * @see PostDto
  */

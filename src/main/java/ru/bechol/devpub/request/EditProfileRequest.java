@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
  * @see ru.bechol.devpub.controller.ApiAuthController
  * @see ru.bechol.devpub.controller.CommentController
  * @see ru.bechol.devpub.controller.ProfileController
- * @see ru.bechol.devpub.service.ProfileService
+ * @see ru.bechol.devpub.service.IProfileService
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)

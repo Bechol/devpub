@@ -2,7 +2,7 @@ package ru.bechol.devpub.models;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.bechol.devpub.repository.GlobalSettingRepository;
+import ru.bechol.devpub.repository.IGlobalSettingRepository;
 
 import javax.persistence.*;
 
@@ -13,8 +13,8 @@ import javax.persistence.*;
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see GlobalSettingRepository
- * @see ru.bechol.devpub.service.GlobalSettingsService
+ * @see IGlobalSettingRepository
+ * @see ru.bechol.devpub.service.IGlobalSettingsService
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

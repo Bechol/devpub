@@ -9,17 +9,17 @@ import ru.bechol.devpub.models.Tag;
 import java.util.List;
 
 /**
- * Класс TagRepository.
+ * Класс ITagRepository.
  * Реализация слоя доступа к данным для Tag.
  *
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see Tag
- * @see ru.bechol.devpub.service.TagService
+ * @see ru.bechol.devpub.service.ITagService
  */
 @Repository
-public interface TagRepository extends JpaRepository<Tag, Long> {
+public interface ITagRepository extends JpaRepository<Tag, Long> {
 
     /**
      * Метод findByQuery.

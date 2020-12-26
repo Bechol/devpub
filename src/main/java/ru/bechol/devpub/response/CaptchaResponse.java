@@ -2,6 +2,7 @@ package ru.bechol.devpub.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.service.impl.CaptchaCodesService;
 
 /**
  * Класс CaptchaResponse.
@@ -10,7 +11,7 @@ import lombok.experimental.FieldDefaults;
  * @author Oleg Bech
  * @author oleg071984@gmail.com
  * @see ru.bechol.devpub.controller.ApiAuthController
- * @see ru.bechol.devpub.service.CaptchaCodesService
+ * @see CaptchaCodesService
  */
 @Getter
 @Builder

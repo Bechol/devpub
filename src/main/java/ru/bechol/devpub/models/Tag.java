@@ -3,6 +3,7 @@ package ru.bechol.devpub.models;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.repository.ITagRepository;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -14,9 +15,9 @@ import java.util.Set;
  * @author Oleg Bech.
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.TagRepository
- * @see ru.bechol.devpub.service.TagService
- * @see ru.bechol.devpub.service.PostService
+ * @see ITagRepository
+ * @see ru.bechol.devpub.service.ITagService
+ * @see ru.bechol.devpub.service.IPostService
  * @see ru.bechol.devpub.controller.TagController
  * @see ru.bechol.devpub.controller.PostController
  */

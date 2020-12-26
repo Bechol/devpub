@@ -1,12 +1,12 @@
-package ru.bechol.devpub.service;
+package ru.bechol.devpub.service.impl;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.mail.javamail.*;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import ru.bechol.devpub.service.aspect.Trace;
+import org.springframework.stereotype.*;
+import ru.bechol.devpub.service.*;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -21,8 +21,8 @@ import javax.mail.internet.MimeMessage;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Async("asyncExecutor")
-@Service
-public class EmailService {
+@Component
+public class EmailService implements IEmailService {
 
 	@Value("${mail-sender.sender-name}")
 	String senderName;
@@ -35,11 +35,11 @@ public class EmailService {
 	 * Метод send.
 	 * Отправка писем.
 	 *
-	 * @param emailTo - email получателя.
-	 * @param subject - тема письма.
-	 * @param message - текст письма.
+	 * @param emailTo email получателя.
+	 * @param subject тема письма.
+	 * @param message текст письма.
 	 */
-	@Trace
+	@Override
 	public void send(String emailTo, String subject, String message) {
 		try {
 			MimeMessage mailMessage = mailSender.createMimeMessage();

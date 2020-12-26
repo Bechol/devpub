@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import ru.bechol.devpub.repository.ICommentRepository;
+import ru.bechol.devpub.service.impl.CommentService;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -14,8 +16,8 @@ import java.time.LocalDateTime;
  *
  * @author Oleg Bech
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.CommentRepository
- * @see ru.bechol.devpub.service.CommentService
+ * @see ICommentRepository
+ * @see CommentService
  * @see ru.bechol.devpub.controller.CommentController
  */
 @Getter

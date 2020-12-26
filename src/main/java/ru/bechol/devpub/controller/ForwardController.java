@@ -2,9 +2,7 @@ package ru.bechol.devpub.controller;
 
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Класс ForwardController.
@@ -17,13 +15,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class ForwardController {
 
-    @RequestMapping(method = {RequestMethod.OPTIONS, RequestMethod.GET}, value = "/**/{path:[^\\\\.]*}")
-    public String redirectToIndex() {
-        return "forward:/";
-    }
+	@RequestMapping(method = {RequestMethod.OPTIONS, RequestMethod.GET}, value = "/**/{path:[^\\\\.]*}")
+	public String redirectToIndex() {
+		return "forward:/";
+	}
 
-    @GetMapping("/auth/restore")
-    public String goPasswordRestore() {
-        return "redirect:/login/restore-password";
-    }
+	@GetMapping("/auth/restore")
+	public String goPasswordRestore() {
+		return "redirect:/login/restore-password";
+	}
 }

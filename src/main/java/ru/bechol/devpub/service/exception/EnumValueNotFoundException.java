@@ -10,7 +10,7 @@ package ru.bechol.devpub.service.exception;
  */
 public class EnumValueNotFoundException extends Exception {
 
-    public EnumValueNotFoundException(String message) {
-        super(message);
-    }
+	public EnumValueNotFoundException(String message) {
+		super(message);
+	}
 }

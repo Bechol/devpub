@@ -1,12 +1,11 @@
 package ru.bechol.devpub.request.validators;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import ru.bechol.devpub.request.validators.annotations.ExistEmailValidation;
-import ru.bechol.devpub.service.UserService;
+import ru.bechol.devpub.service.IUserService;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import javax.validation.*;
 
 /**
  * Класс EmailValidator.
@@ -18,7 +17,8 @@ import javax.validation.ConstraintValidatorContext;
 public class EmailValidator implements ConstraintValidator<ExistEmailValidation, String> {
 
     @Autowired
-    private UserService userService;
+    @Qualifier("userService")
+    private IUserService userService;
 
     @Override
     public void initialize(ExistEmailValidation constraintAnnotation) {

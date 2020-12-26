@@ -11,7 +11,7 @@ package ru.bechol.devpub.service.exception;
  */
 public class ModeratorNotFoundException extends Exception {
 
-    public ModeratorNotFoundException(String msg) {
-        super(msg);
-    }
+	public ModeratorNotFoundException(String msg) {
+		super(msg);
+	}
 }

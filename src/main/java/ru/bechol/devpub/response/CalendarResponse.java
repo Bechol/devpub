@@ -13,7 +13,7 @@ import java.util.*;
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.controller.CalendarController
- * @see ru.bechol.devpub.service.PostService
+ * @see ru.bechol.devpub.service.IPostService
  */
 @Getter
 @Builder

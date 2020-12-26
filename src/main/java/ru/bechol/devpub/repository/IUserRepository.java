@@ -7,17 +7,17 @@ import ru.bechol.devpub.models.User;
 import java.util.Optional;
 
 /**
- * Класс UserRepository.
+ * Класс IUserRepository.
  * Реализация слоя доступа к данным для User.
  *
  * @author Oleg Bech
  * @version 1.0
  * @email oleg071984@gmail.com
  * @see User
- * @see ru.bechol.devpub.service.UserService
+ * @see ru.bechol.devpub.service.IUserService
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface IUserRepository extends JpaRepository<User, Long> {
     /**
      * Метод findByEmail.
      * Поиск пользователя по email.

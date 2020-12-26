@@ -13,7 +13,7 @@ import java.util.List;
  * @author Oleg Bech
  * @email oleg071984@gmail.com
  * @see ru.bechol.devpub.controller.PostController
- * @see ru.bechol.devpub.service.PostService
+ * @see ru.bechol.devpub.service.IPostService
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

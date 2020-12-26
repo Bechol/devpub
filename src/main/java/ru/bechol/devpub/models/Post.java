@@ -3,6 +3,7 @@ package ru.bechol.devpub.models;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.bechol.devpub.repository.IPostRepository;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -15,8 +16,8 @@ import java.util.*;
  * @author Oleg Bech.
  * @version 1.0
  * @email oleg071984@gmail.com
- * @see ru.bechol.devpub.repository.PostRepository
- * @see ru.bechol.devpub.service.PostService
+ * @see IPostRepository
+ * @see ru.bechol.devpub.service.IPostService
  * @see ru.bechol.devpub.controller.PostController
  */
 @Getter
