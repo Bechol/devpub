@@ -110,7 +110,7 @@ public class ProfileController {
 	@PostMapping(value = "/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Response<?> editProfile(@RequestParam(required = false) MultipartFile photo,
-								   @ModelAttribute EditProfileRequest editProfileRequest, User user)
+								   @ModelAttribute EditProfileRequest editProfileRequest, @AuthenticationPrincipal User user)
 			throws IOException {
 		return profileService.editProfile(photo, editProfileRequest, user);
 	}
